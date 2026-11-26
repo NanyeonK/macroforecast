@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 
@@ -27,26 +26,26 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=6a604523" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
     <script src="../_static/documentation_options.js?v=c9f84ce7"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../_static/design-tabs.js?v=fcb327ea"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference/model_ensemble';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -54,6 +53,7 @@
     <link rel="next" title="macroforecast.model_selection" href="model_selection.html" />
     <link rel="prev" title="macroforecast.models" href="models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5" />
   
@@ -103,7 +103,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -234,7 +234,7 @@
         <div class="navbar-item navbar-persistent--container">
           
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -245,15 +245,15 @@
         <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -290,7 +290,7 @@
   
     <div class="navbar-persistent--mobile">
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -299,7 +299,7 @@
   
 
   
-    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -313,7 +313,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
@@ -418,15 +418,15 @@
           <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -461,7 +461,7 @@
   </div>
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
   <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
     <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
   </svg>
@@ -501,7 +501,7 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="window.html">macroforecast.window</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">macroforecast.models</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.model_ensemble</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">macroforecast.model_ensemble</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_selection.html">macroforecast.model_selection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
@@ -571,7 +571,7 @@
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="../index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
+        <i class="fa-solid fa-house"></i>
       </a>
     </li>
     
@@ -595,7 +595,7 @@
                 <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-model-ensemble">
-<h1>macroforecast.model_ensemble<a class="headerlink" href="#macroforecast-model-ensemble" title="Link to this heading">#</a></h1>
+<span id="macroforecastmodel_ensemble"></span><h1>macroforecast.model_ensemble<a class="headerlink" href="#macroforecast-model-ensemble" title="Link to this heading">#</a></h1>
 <p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
 <p>Fit-time ensemble estimators and ensemble model specs.</p>
 <p>Guide context: <a class="reference internal" href="../guide/concepts/models_and_arms.html"><span class="std std-doc">../guide/concepts/models_and_arms.md</span></a>.</p>
@@ -692,14 +692,14 @@
 <section id="data-and-module-values">
 <h2>Data And Module Values<a class="headerlink" href="#data-and-module-values" title="Link to this heading">#</a></h2>
 <section id="model-ensemble-base-estimators">
-<h3><code class="docutils literal notranslate"><span class="pre">MODEL_ENSEMBLE_BASE_ESTIMATORS</span></code><a class="headerlink" href="#model-ensemble-base-estimators" title="Link to this heading">#</a></h3>
+<span id="model_ensemble_base_estimators"></span><h3><code class="docutils literal notranslate"><span class="pre">MODEL_ENSEMBLE_BASE_ESTIMATORS</span></code><a class="headerlink" href="#model-ensemble-base-estimators" title="Link to this heading">#</a></h3>
 <p>Kind: <code class="docutils literal notranslate"><span class="pre">data</span></code></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">MODEL_ENSEMBLE_BASE_ESTIMATORS</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="mi">10</span> <span class="n">entries</span><span class="p">:</span> <span class="n">decision_tree</span><span class="p">,</span> <span class="n">elastic_net</span><span class="p">,</span> <span class="n">extra_trees</span><span class="p">,</span> <span class="n">gradient_boosting</span><span class="p">,</span> <span class="n">knn</span><span class="p">,</span> <span class="n">lasso</span><span class="p">,</span> <span class="n">ols</span><span class="p">,</span> <span class="n">random_forest</span><span class="p">,</span> <span class="n">ridge</span><span class="p">,</span> <span class="n">svr</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="model-ensemble-specs">
-<h3><code class="docutils literal notranslate"><span class="pre">MODEL_ENSEMBLE_SPECS</span></code><a class="headerlink" href="#model-ensemble-specs" title="Link to this heading">#</a></h3>
+<span id="model_ensemble_specs"></span><h3><code class="docutils literal notranslate"><span class="pre">MODEL_ENSEMBLE_SPECS</span></code><a class="headerlink" href="#model-ensemble-specs" title="Link to this heading">#</a></h3>
 <p>Kind: <code class="docutils literal notranslate"><span class="pre">data</span></code></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">MODEL_ENSEMBLE_SPECS</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="mi">6</span> <span class="n">entries</span><span class="p">:</span> <span class="n">bagging</span><span class="p">,</span> <span class="n">booging</span><span class="p">,</span> <span class="n">random_subspace</span><span class="p">,</span> <span class="n">stacking</span><span class="p">,</span> <span class="n">subagging</span><span class="p">,</span> <span class="n">super_learner</span><span class="p">)</span>
 </pre></div>
@@ -713,7 +713,7 @@
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.core.BaggingRegressor</span></code></p>
 <section id="signature">
 <h4>Signature<a class="headerlink" href="#signature" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">BaggingRegressor</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">n_estimators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">max_samples</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">base_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span> <span class="n">block_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">max_features</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">BaggingRegressor</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ridge"</span><span class="p">,</span> <span class="n">n_estimators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">max_samples</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">base_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"standard"</span><span class="p">,</span> <span class="n">block_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">max_features</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
@@ -824,17 +824,17 @@
 <h3>BoogingRegressor<a class="headerlink" href="#boogingregressor" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.core.BoogingRegressor</span></code></p>
 <section id="id1">
-<h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<span id="signature-1"></span><h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">BoogingRegressor</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">B</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">sample_frac</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span><span class="p">,</span> <span class="n">inner_n_estimators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">inner_learning_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">inner_max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">inner_subsample</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">mtry</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">data_aug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">noise_level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">shuffle_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">n_augmented_copies</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">scale_continuous</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">fix_seeds</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_trees</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nu</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tree_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bf</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_features</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">da_noise_frac</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">da_drop_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
-<h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<span id="description-1"></span><h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
 <p>Bagging of intentionally overfit stochastic gradient boosting models.</p>
 </section>
 <section id="id3">
-<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
+<span id="parameters-1"></span><h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -959,11 +959,11 @@
 </div>
 </section>
 <section id="id4">
-<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
+<span id="returns-1"></span><h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id5">
-<h4>Minimal Use<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
+<span id="minimal-use-1"></span><h4>Minimal Use<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.model_ensemble.BoogingRegressor(...)</span>
@@ -971,7 +971,7 @@
 </div>
 </section>
 <section id="id6">
-<h4>Public Methods<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
+<span id="public-methods-1"></span><h4>Public Methods<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Method</p></th>
@@ -1001,17 +1001,17 @@
 <h3>RandomSubspaceRegressor<a class="headerlink" href="#randomsubspaceregressor" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.core.RandomSubspaceRegressor</span></code></p>
 <section id="id7">
-<h4>Signature<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">RandomSubspaceRegressor</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">n_estimators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">max_features</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">max_samples</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">base_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<span id="signature-2"></span><h4>Signature<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">RandomSubspaceRegressor</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ridge"</span><span class="p">,</span> <span class="n">n_estimators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">max_features</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">max_samples</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">base_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id8">
-<h4>Description<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
+<span id="description-2"></span><h4>Description<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
 <p>Fit base models on randomly selected feature subsets and average them.</p>
 </section>
 <section id="id9">
-<h4>Parameters<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
+<span id="parameters-2"></span><h4>Parameters<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1056,11 +1056,11 @@
 </div>
 </section>
 <section id="id10">
-<h4>Returns<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
+<span id="returns-2"></span><h4>Returns<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id11">
-<h4>Minimal Use<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
+<span id="minimal-use-2"></span><h4>Minimal Use<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.model_ensemble.RandomSubspaceRegressor(...)</span>
@@ -1068,7 +1068,7 @@
 </div>
 </section>
 <section id="id12">
-<h4>Public Methods<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
+<span id="public-methods-2"></span><h4>Public Methods<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Method</p></th>
@@ -1098,17 +1098,17 @@
 <h3>StackingRegressor<a class="headerlink" href="#stackingregressor" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.core.StackingRegressor</span></code></p>
 <section id="id13">
-<h4>Signature<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">StackingRegressor</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;ridge&#39;</span><span class="p">,</span> <span class="s1">&#39;lasso&#39;</span><span class="p">,</span> <span class="s1">&#39;random_forest&#39;</span><span class="p">),</span> <span class="n">meta_model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">splitter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">model_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">meta_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">passthrough</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<span id="signature-3"></span><h4>Signature<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">StackingRegressor</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'ridge'</span><span class="p">,</span> <span class="s1">'lasso'</span><span class="p">,</span> <span class="s1">'random_forest'</span><span class="p">),</span> <span class="n">meta_model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ridge"</span><span class="p">,</span> <span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">splitter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"forward"</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">model_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">meta_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">passthrough</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id14">
-<h4>Description<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
+<span id="description-3"></span><h4>Description<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
 <p>Out-of-fold stacking over supported base estimators.</p>
 </section>
 <section id="id15">
-<h4>Parameters<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
+<span id="parameters-3"></span><h4>Parameters<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1163,11 +1163,11 @@
 </div>
 </section>
 <section id="id16">
-<h4>Returns<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
+<span id="returns-3"></span><h4>Returns<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id17">
-<h4>Minimal Use<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
+<span id="minimal-use-3"></span><h4>Minimal Use<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.model_ensemble.StackingRegressor(...)</span>
@@ -1175,7 +1175,7 @@
 </div>
 </section>
 <section id="id18">
-<h4>Public Methods<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
+<span id="public-methods-3"></span><h4>Public Methods<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Method</p></th>
@@ -1201,17 +1201,17 @@
 <h3>SuperLearnerRegressor<a class="headerlink" href="#superlearnerregressor" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.core.SuperLearnerRegressor</span></code></p>
 <section id="id19">
-<h4>Signature<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">SuperLearnerRegressor</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;ridge&#39;</span><span class="p">,</span> <span class="s1">&#39;lasso&#39;</span><span class="p">,</span> <span class="s1">&#39;random_forest&#39;</span><span class="p">),</span> <span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">splitter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="n">weight_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;nnls&quot;</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">model_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<span id="signature-4"></span><h4>Signature<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">SuperLearnerRegressor</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'ridge'</span><span class="p">,</span> <span class="s1">'lasso'</span><span class="p">,</span> <span class="s1">'random_forest'</span><span class="p">),</span> <span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">splitter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"forward"</span><span class="p">,</span> <span class="n">weight_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"nnls"</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">model_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id20">
-<h4>Description<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
+<span id="description-4"></span><h4>Description<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
 <p>Convex-weight Super Learner over supported base estimators.</p>
 </section>
 <section id="id21">
-<h4>Parameters<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
+<span id="parameters-4"></span><h4>Parameters<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1256,11 +1256,11 @@
 </div>
 </section>
 <section id="id22">
-<h4>Returns<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
+<span id="returns-4"></span><h4>Returns<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id23">
-<h4>Minimal Use<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
+<span id="minimal-use-4"></span><h4>Minimal Use<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.model_ensemble.SuperLearnerRegressor(...)</span>
@@ -1268,7 +1268,7 @@
 </div>
 </section>
 <section id="id24">
-<h4>Public Methods<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
+<span id="public-methods-4"></span><h4>Public Methods<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Method</p></th>
@@ -1294,17 +1294,17 @@
 <h3>bagging<a class="headerlink" href="#bagging" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.core.bagging</span></code></p>
 <section id="id25">
-<h4>Signature<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">bagging</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">n_estimators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">max_samples</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">base_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span> <span class="n">block_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">max_features</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelFit</span>
+<span id="signature-5"></span><h4>Signature<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">bagging</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ridge"</span><span class="p">,</span> <span class="n">n_estimators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">max_samples</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">base_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"standard"</span><span class="p">,</span> <span class="n">block_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">replace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">max_features</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelFit</span>
 </pre></div>
 </div>
 </section>
 <section id="id26">
-<h4>Description<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
+<span id="description-5"></span><h4>Description<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
 <p>Fit a bootstrap-aggregated fit-time model ensemble.</p>
 </section>
 <section id="id27">
-<h4>Parameters<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
+<span id="parameters-5"></span><h4>Parameters<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1374,11 +1374,11 @@
 </div>
 </section>
 <section id="id28">
-<h4>Returns<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
+<span id="returns-5"></span><h4>Returns<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ModelFit</span></code></p>
 </section>
 <section id="id29">
-<h4>Minimal Use<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
+<span id="minimal-use-5"></span><h4>Minimal Use<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_ensemble.bagging(...)</span>
@@ -1390,17 +1390,17 @@
 <h3>booging<a class="headerlink" href="#booging" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.core.booging</span></code></p>
 <section id="id30">
-<h4>Signature<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
+<span id="signature-6"></span><h4>Signature<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">booging</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">B</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">sample_frac</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.75</span><span class="p">,</span> <span class="n">inner_n_estimators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span> <span class="n">inner_learning_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">inner_max_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">inner_subsample</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">mtry</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">data_aug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">noise_level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span> <span class="n">shuffle_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">n_augmented_copies</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">scale_continuous</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">fix_seeds</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sampling_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_trees</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nu</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tree_depth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bf</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_features</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">da_noise_frac</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">da_drop_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelFit</span>
 </pre></div>
 </div>
 </section>
 <section id="id31">
-<h4>Description<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
+<span id="description-6"></span><h4>Description<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
 <p>Fit Booging: bagged overfit stochastic gradient boosting with augmentation.</p>
 </section>
 <section id="id32">
-<h4>Parameters<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
+<span id="parameters-6"></span><h4>Parameters<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1535,11 +1535,11 @@
 </div>
 </section>
 <section id="id33">
-<h4>Returns<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
+<span id="returns-6"></span><h4>Returns<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ModelFit</span></code></p>
 </section>
 <section id="id34">
-<h4>Minimal Use<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
+<span id="minimal-use-6"></span><h4>Minimal Use<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_ensemble.booging(...)</span>
@@ -1548,20 +1548,20 @@
 </section>
 </section>
 <section id="custom-model-ensemble">
-<h3>custom_model_ensemble<a class="headerlink" href="#custom-model-ensemble" title="Link to this heading">#</a></h3>
+<span id="custom_model_ensemble"></span><h3>custom_model_ensemble<a class="headerlink" href="#custom-model-ensemble" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.specs.custom_model_ensemble</span></code></p>
 <section id="id35">
-<h4>Signature<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">custom_model_ensemble</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fit_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">default_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ModelParameter</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">search_spaces</span><span class="p">:</span> <span class="n">SearchSpaces</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_search_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;grid&quot;</span><span class="p">,</span> <span class="n">default_preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;custom&quot;</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelSpec</span>
+<span id="signature-7"></span><h4>Signature<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">custom_model_ensemble</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fit_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">default_params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">parameters</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ModelParameter</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">search_spaces</span><span class="p">:</span> <span class="n">SearchSpaces</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">default_search_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"grid"</span><span class="p">,</span> <span class="n">default_preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"standard"</span><span class="p">,</span> <span class="n">backend</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"custom"</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id36">
-<h4>Description<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
+<span id="description-7"></span><h4>Description<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
 <p>Build a user-owned fit-time model-ensemble spec.</p>
 </section>
 <section id="id37">
-<h4>Parameters<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
+<span id="parameters-7"></span><h4>Parameters<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1621,11 +1621,11 @@
 </div>
 </section>
 <section id="id38">
-<h4>Returns<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
+<span id="returns-7"></span><h4>Returns<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code></p>
 </section>
 <section id="id39">
-<h4>Minimal Use<a class="headerlink" href="#id39" title="Link to this heading">#</a></h4>
+<span id="minimal-use-7"></span><h4>Minimal Use<a class="headerlink" href="#id39" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_ensemble.custom_model_ensemble(...)</span>
@@ -1634,20 +1634,20 @@
 </section>
 </section>
 <section id="describe-model-ensemble">
-<h3>describe_model_ensemble<a class="headerlink" href="#describe-model-ensemble" title="Link to this heading">#</a></h3>
+<span id="describe_model_ensemble"></span><h3>describe_model_ensemble<a class="headerlink" href="#describe-model-ensemble" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.specs.describe_model_ensemble</span></code></p>
 <section id="id40">
-<h4>Signature<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
+<span id="signature-8"></span><h4>Signature<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">describe_model_ensemble</span><span class="p">(</span><span class="n">ensemble</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">ModelSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id41">
-<h4>Description<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
+<span id="description-8"></span><h4>Description<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
 <p>Describe fit-time model-ensemble parameters and preset spaces.</p>
 </section>
 <section id="id42">
-<h4>Parameters<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
+<span id="parameters-8"></span><h4>Parameters<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1667,11 +1667,11 @@
 </div>
 </section>
 <section id="id43">
-<h4>Returns<a class="headerlink" href="#id43" title="Link to this heading">#</a></h4>
+<span id="returns-8"></span><h4>Returns<a class="headerlink" href="#id43" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id44">
-<h4>Minimal Use<a class="headerlink" href="#id44" title="Link to this heading">#</a></h4>
+<span id="minimal-use-8"></span><h4>Minimal Use<a class="headerlink" href="#id44" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_ensemble.describe_model_ensemble(...)</span>
@@ -1680,20 +1680,20 @@
 </section>
 </section>
 <section id="get-model-ensemble">
-<h3>get_model_ensemble<a class="headerlink" href="#get-model-ensemble" title="Link to this heading">#</a></h3>
+<span id="get_model_ensemble"></span><h3>get_model_ensemble<a class="headerlink" href="#get-model-ensemble" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.specs.get_model_ensemble</span></code></p>
 <section id="id45">
-<h4>Signature<a class="headerlink" href="#id45" title="Link to this heading">#</a></h4>
+<span id="signature-9"></span><h4>Signature<a class="headerlink" href="#id45" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">get_model_ensemble</span><span class="p">(</span><span class="n">ensemble</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">ModelSpec</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id46">
-<h4>Description<a class="headerlink" href="#id46" title="Link to this heading">#</a></h4>
+<span id="description-9"></span><h4>Description<a class="headerlink" href="#id46" title="Link to this heading">#</a></h4>
 <p>Return a fit-time model-ensemble spec by name, callable, or spec.</p>
 </section>
 <section id="id47">
-<h4>Parameters<a class="headerlink" href="#id47" title="Link to this heading">#</a></h4>
+<span id="parameters-9"></span><h4>Parameters<a class="headerlink" href="#id47" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1723,11 +1723,11 @@
 </div>
 </section>
 <section id="id48">
-<h4>Returns<a class="headerlink" href="#id48" title="Link to this heading">#</a></h4>
+<span id="returns-9"></span><h4>Returns<a class="headerlink" href="#id48" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code></p>
 </section>
 <section id="id49">
-<h4>Minimal Use<a class="headerlink" href="#id49" title="Link to this heading">#</a></h4>
+<span id="minimal-use-9"></span><h4>Minimal Use<a class="headerlink" href="#id49" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_ensemble.get_model_ensemble(...)</span>
@@ -1736,24 +1736,24 @@
 </section>
 </section>
 <section id="list-model-ensemble-bases">
-<h3>list_model_ensemble_bases<a class="headerlink" href="#list-model-ensemble-bases" title="Link to this heading">#</a></h3>
+<span id="list_model_ensemble_bases"></span><h3>list_model_ensemble_bases<a class="headerlink" href="#list-model-ensemble-bases" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.core.list_model_ensemble_bases</span></code></p>
 <section id="id50">
-<h4>Signature<a class="headerlink" href="#id50" title="Link to this heading">#</a></h4>
+<span id="signature-10"></span><h4>Signature<a class="headerlink" href="#id50" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">list_model_ensemble_bases</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id51">
-<h4>Description<a class="headerlink" href="#id51" title="Link to this heading">#</a></h4>
+<span id="description-10"></span><h4>Description<a class="headerlink" href="#id51" title="Link to this heading">#</a></h4>
 <p>Return supported inner estimators for fit-time model ensembles.</p>
 </section>
 <section id="id52">
-<h4>Returns<a class="headerlink" href="#id52" title="Link to this heading">#</a></h4>
+<span id="returns-10"></span><h4>Returns<a class="headerlink" href="#id52" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id53">
-<h4>Minimal Use<a class="headerlink" href="#id53" title="Link to this heading">#</a></h4>
+<span id="minimal-use-10"></span><h4>Minimal Use<a class="headerlink" href="#id53" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_ensemble.list_model_ensemble_bases(...)</span>
@@ -1762,20 +1762,20 @@
 </section>
 </section>
 <section id="list-model-ensemble-specs">
-<h3>list_model_ensemble_specs<a class="headerlink" href="#list-model-ensemble-specs" title="Link to this heading">#</a></h3>
+<span id="list_model_ensemble_specs"></span><h3>list_model_ensemble_specs<a class="headerlink" href="#list-model-ensemble-specs" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.specs.list_model_ensemble_specs</span></code></p>
 <section id="id54">
-<h4>Signature<a class="headerlink" href="#id54" title="Link to this heading">#</a></h4>
+<span id="signature-11"></span><h4>Signature<a class="headerlink" href="#id54" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">list_model_ensemble_specs</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">family</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id55">
-<h4>Description<a class="headerlink" href="#id55" title="Link to this heading">#</a></h4>
+<span id="description-11"></span><h4>Description<a class="headerlink" href="#id55" title="Link to this heading">#</a></h4>
 <p>List registered fit-time model-ensemble specs.</p>
 </section>
 <section id="id56">
-<h4>Parameters<a class="headerlink" href="#id56" title="Link to this heading">#</a></h4>
+<span id="parameters-10"></span><h4>Parameters<a class="headerlink" href="#id56" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1795,11 +1795,11 @@
 </div>
 </section>
 <section id="id57">
-<h4>Returns<a class="headerlink" href="#id57" title="Link to this heading">#</a></h4>
+<span id="returns-11"></span><h4>Returns<a class="headerlink" href="#id57" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id58">
-<h4>Minimal Use<a class="headerlink" href="#id58" title="Link to this heading">#</a></h4>
+<span id="minimal-use-11"></span><h4>Minimal Use<a class="headerlink" href="#id58" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_ensemble.list_model_ensemble_specs(...)</span>
@@ -1808,20 +1808,20 @@
 </section>
 </section>
 <section id="model-ensemble-search-space">
-<h3>model_ensemble_search_space<a class="headerlink" href="#model-ensemble-search-space" title="Link to this heading">#</a></h3>
+<span id="model_ensemble_search_space"></span><h3>model_ensemble_search_space<a class="headerlink" href="#model-ensemble-search-space" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.specs.model_ensemble_search_space</span></code></p>
 <section id="id59">
-<h4>Signature<a class="headerlink" href="#id59" title="Link to this heading">#</a></h4>
+<span id="signature-12"></span><h4>Signature<a class="headerlink" href="#id59" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">model_ensemble_search_space</span><span class="p">(</span><span class="n">ensemble</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">ModelSpec</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span>
 </pre></div>
 </div>
 </section>
 <section id="id60">
-<h4>Description<a class="headerlink" href="#id60" title="Link to this heading">#</a></h4>
+<span id="description-12"></span><h4>Description<a class="headerlink" href="#id60" title="Link to this heading">#</a></h4>
 <p>Return a model-ensemble-owned hyperparameter space.</p>
 </section>
 <section id="id61">
-<h4>Parameters<a class="headerlink" href="#id61" title="Link to this heading">#</a></h4>
+<span id="parameters-11"></span><h4>Parameters<a class="headerlink" href="#id61" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1846,11 +1846,11 @@
 </div>
 </section>
 <section id="id62">
-<h4>Returns<a class="headerlink" href="#id62" title="Link to this heading">#</a></h4>
+<span id="returns-12"></span><h4>Returns<a class="headerlink" href="#id62" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">tuple[Any,</span> <span class="pre">...]]</span></code></p>
 </section>
 <section id="id63">
-<h4>Minimal Use<a class="headerlink" href="#id63" title="Link to this heading">#</a></h4>
+<span id="minimal-use-12"></span><h4>Minimal Use<a class="headerlink" href="#id63" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_ensemble.model_ensemble_search_space(...)</span>
@@ -1859,20 +1859,20 @@
 </section>
 </section>
 <section id="random-subspace">
-<h3>random_subspace<a class="headerlink" href="#random-subspace" title="Link to this heading">#</a></h3>
+<span id="random_subspace"></span><h3>random_subspace<a class="headerlink" href="#random-subspace" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.core.random_subspace</span></code></p>
 <section id="id64">
-<h4>Signature<a class="headerlink" href="#id64" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">random_subspace</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">n_estimators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">max_features</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">max_samples</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">base_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelFit</span>
+<span id="signature-13"></span><h4>Signature<a class="headerlink" href="#id64" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">random_subspace</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ridge"</span><span class="p">,</span> <span class="n">n_estimators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">max_features</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">max_samples</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">base_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelFit</span>
 </pre></div>
 </div>
 </section>
 <section id="id65">
-<h4>Description<a class="headerlink" href="#id65" title="Link to this heading">#</a></h4>
+<span id="description-13"></span><h4>Description<a class="headerlink" href="#id65" title="Link to this heading">#</a></h4>
 <p>Fit a random-subspace model ensemble.</p>
 </section>
 <section id="id66">
-<h4>Parameters<a class="headerlink" href="#id66" title="Link to this heading">#</a></h4>
+<span id="parameters-12"></span><h4>Parameters<a class="headerlink" href="#id66" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1927,11 +1927,11 @@
 </div>
 </section>
 <section id="id67">
-<h4>Returns<a class="headerlink" href="#id67" title="Link to this heading">#</a></h4>
+<span id="returns-13"></span><h4>Returns<a class="headerlink" href="#id67" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ModelFit</span></code></p>
 </section>
 <section id="id68">
-<h4>Minimal Use<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
+<span id="minimal-use-13"></span><h4>Minimal Use<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_ensemble.random_subspace(...)</span>
@@ -1943,17 +1943,17 @@
 <h3>stacking<a class="headerlink" href="#stacking" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.core.stacking</span></code></p>
 <section id="id69">
-<h4>Signature<a class="headerlink" href="#id69" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">stacking</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;ridge&#39;</span><span class="p">,</span> <span class="s1">&#39;lasso&#39;</span><span class="p">,</span> <span class="s1">&#39;random_forest&#39;</span><span class="p">),</span> <span class="n">meta_model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">splitter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">model_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">meta_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">passthrough</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelFit</span>
+<span id="signature-14"></span><h4>Signature<a class="headerlink" href="#id69" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">stacking</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'ridge'</span><span class="p">,</span> <span class="s1">'lasso'</span><span class="p">,</span> <span class="s1">'random_forest'</span><span class="p">),</span> <span class="n">meta_model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ridge"</span><span class="p">,</span> <span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">splitter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"forward"</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">model_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">meta_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">passthrough</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelFit</span>
 </pre></div>
 </div>
 </section>
 <section id="id70">
-<h4>Description<a class="headerlink" href="#id70" title="Link to this heading">#</a></h4>
+<span id="description-14"></span><h4>Description<a class="headerlink" href="#id70" title="Link to this heading">#</a></h4>
 <p>Fit an out-of-fold stacked model ensemble.</p>
 </section>
 <section id="id71">
-<h4>Parameters<a class="headerlink" href="#id71" title="Link to this heading">#</a></h4>
+<span id="parameters-13"></span><h4>Parameters<a class="headerlink" href="#id71" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2018,11 +2018,11 @@
 </div>
 </section>
 <section id="id72">
-<h4>Returns<a class="headerlink" href="#id72" title="Link to this heading">#</a></h4>
+<span id="returns-14"></span><h4>Returns<a class="headerlink" href="#id72" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ModelFit</span></code></p>
 </section>
 <section id="id73">
-<h4>Minimal Use<a class="headerlink" href="#id73" title="Link to this heading">#</a></h4>
+<span id="minimal-use-14"></span><h4>Minimal Use<a class="headerlink" href="#id73" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_ensemble.stacking(...)</span>
@@ -2034,17 +2034,17 @@
 <h3>subagging<a class="headerlink" href="#subagging" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.core.subagging</span></code></p>
 <section id="id74">
-<h4>Signature<a class="headerlink" href="#id74" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">subagging</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">n_estimators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">max_samples</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.632</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">base_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_features</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelFit</span>
+<span id="signature-15"></span><h4>Signature<a class="headerlink" href="#id74" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">subagging</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">base</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ridge"</span><span class="p">,</span> <span class="n">n_estimators</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">max_samples</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.632</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">base_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_features</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelFit</span>
 </pre></div>
 </div>
 </section>
 <section id="id75">
-<h4>Description<a class="headerlink" href="#id75" title="Link to this heading">#</a></h4>
+<span id="description-15"></span><h4>Description<a class="headerlink" href="#id75" title="Link to this heading">#</a></h4>
 <p>Fit subagging: sampling without replacement before member fits.</p>
 </section>
 <section id="id76">
-<h4>Parameters<a class="headerlink" href="#id76" title="Link to this heading">#</a></h4>
+<span id="parameters-14"></span><h4>Parameters<a class="headerlink" href="#id76" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2099,11 +2099,11 @@
 </div>
 </section>
 <section id="id77">
-<h4>Returns<a class="headerlink" href="#id77" title="Link to this heading">#</a></h4>
+<span id="returns-15"></span><h4>Returns<a class="headerlink" href="#id77" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ModelFit</span></code></p>
 </section>
 <section id="id78">
-<h4>Minimal Use<a class="headerlink" href="#id78" title="Link to this heading">#</a></h4>
+<span id="minimal-use-15"></span><h4>Minimal Use<a class="headerlink" href="#id78" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_ensemble.subagging(...)</span>
@@ -2112,20 +2112,20 @@
 </section>
 </section>
 <section id="super-learner">
-<h3>super_learner<a class="headerlink" href="#super-learner" title="Link to this heading">#</a></h3>
+<span id="super_learner"></span><h3>super_learner<a class="headerlink" href="#super-learner" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_ensemble.core.super_learner</span></code></p>
 <section id="id79">
-<h4>Signature<a class="headerlink" href="#id79" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">super_learner</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;ridge&#39;</span><span class="p">,</span> <span class="s1">&#39;lasso&#39;</span><span class="p">,</span> <span class="s1">&#39;random_forest&#39;</span><span class="p">),</span> <span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">splitter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="n">weight_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;nnls&quot;</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">model_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelFit</span>
+<span id="signature-16"></span><h4>Signature<a class="headerlink" href="#id79" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_ensemble</span><span class="o">.</span><span class="n">super_learner</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'ridge'</span><span class="p">,</span> <span class="s1">'lasso'</span><span class="p">,</span> <span class="s1">'random_forest'</span><span class="p">),</span> <span class="n">n_splits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">splitter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"forward"</span><span class="p">,</span> <span class="n">weight_method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"nnls"</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">model_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelFit</span>
 </pre></div>
 </div>
 </section>
 <section id="id80">
-<h4>Description<a class="headerlink" href="#id80" title="Link to this heading">#</a></h4>
+<span id="description-16"></span><h4>Description<a class="headerlink" href="#id80" title="Link to this heading">#</a></h4>
 <p>Fit a SuperLearner-style convex-weight model ensemble.</p>
 </section>
 <section id="id81">
-<h4>Parameters<a class="headerlink" href="#id81" title="Link to this heading">#</a></h4>
+<span id="parameters-15"></span><h4>Parameters<a class="headerlink" href="#id81" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2180,11 +2180,11 @@
 </div>
 </section>
 <section id="id82">
-<h4>Returns<a class="headerlink" href="#id82" title="Link to this heading">#</a></h4>
+<span id="returns-16"></span><h4>Returns<a class="headerlink" href="#id82" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ModelFit</span></code></p>
 </section>
 <section id="id83">
-<h4>Minimal Use<a class="headerlink" href="#id83" title="Link to this heading">#</a></h4>
+<span id="minimal-use-16"></span><h4>Minimal Use<a class="headerlink" href="#id83" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_ensemble.super_learner(...)</span>
@@ -2230,7 +2230,7 @@
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
@@ -2432,8 +2432,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -2460,7 +2460,6 @@
 
   <p class="sphinx-version">
     Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
-    <br/>
   </p>
 </div>
       

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 
@@ -27,26 +26,26 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=6a604523" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
     <script src="../_static/documentation_options.js?v=c9f84ce7"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../_static/design-tabs.js?v=fcb327ea"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference/preprocessing';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -54,6 +53,7 @@
     <link rel="next" title="macroforecast.data_analysis" href="data_analysis.html" />
     <link rel="prev" title="macroforecast.data" href="data.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5" />
   
@@ -103,7 +103,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -234,7 +234,7 @@
         <div class="navbar-item navbar-persistent--container">
           
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -245,15 +245,15 @@
         <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -290,7 +290,7 @@
   
     <div class="navbar-persistent--mobile">
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -299,7 +299,7 @@
   
 
   
-    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -313,7 +313,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
@@ -418,15 +418,15 @@
           <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -461,7 +461,7 @@
   </div>
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
   <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
     <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
   </svg>
@@ -488,7 +488,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Data Pipeline</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="data.html">macroforecast.data</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.preprocessing</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">macroforecast.preprocessing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="data_analysis.html">macroforecast.data_analysis</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Feature Pipeline</span></p>
@@ -571,7 +571,7 @@
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="../index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
+        <i class="fa-solid fa-house"></i>
       </a>
     </li>
     
@@ -595,7 +595,7 @@
                 <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-preprocessing">
-<h1>macroforecast.preprocessing<a class="headerlink" href="#macroforecast-preprocessing" title="Link to this heading">#</a></h1>
+<span id="macroforecastpreprocessing"></span><h1>macroforecast.preprocessing<a class="headerlink" href="#macroforecast-preprocessing" title="Link to this heading">#</a></h1>
 <p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
 <p>Transform-code application, outlier handling, imputation, frame-edge handling, and reusable preprocessing specs.</p>
 <p>Guide context: <a class="reference internal" href="../guide/concepts/preprocessing.html"><span class="std std-doc">../guide/concepts/preprocessing.md</span></a>.</p>
@@ -779,14 +779,14 @@
 </div>
 </section>
 <section id="fred-sd-national-analog-transform-codes">
-<h3><code class="docutils literal notranslate"><span class="pre">FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES</span></code><a class="headerlink" href="#fred-sd-national-analog-transform-codes" title="Link to this heading">#</a></h3>
+<span id="fred_sd_national_analog_transform_codes"></span><h3><code class="docutils literal notranslate"><span class="pre">FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES</span></code><a class="headerlink" href="#fred-sd-national-analog-transform-codes" title="Link to this heading">#</a></h3>
 <p>Kind: <code class="docutils literal notranslate"><span class="pre">data</span></code></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">FRED_SD_NATIONAL_ANALOG_TRANSFORM_CODES</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="mi">13</span> <span class="n">entries</span><span class="p">:</span> <span class="n">CONS</span><span class="p">,</span> <span class="n">FIRE</span><span class="p">,</span> <span class="n">GOVT</span><span class="p">,</span> <span class="n">ICLAIMS</span><span class="p">,</span> <span class="n">INFO</span><span class="p">,</span> <span class="n">LF</span><span class="p">,</span> <span class="n">MFG</span><span class="p">,</span> <span class="n">MFGHRS</span><span class="p">,</span> <span class="n">MINNG</span><span class="p">,</span> <span class="n">NA</span><span class="p">,</span> <span class="n">PARTRATE</span><span class="p">,</span> <span class="n">PSERV</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="fred-sd-medium-confidence-transform-codes">
-<h3><code class="docutils literal notranslate"><span class="pre">FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES</span></code><a class="headerlink" href="#fred-sd-medium-confidence-transform-codes" title="Link to this heading">#</a></h3>
+<span id="fred_sd_medium_confidence_transform_codes"></span><h3><code class="docutils literal notranslate"><span class="pre">FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES</span></code><a class="headerlink" href="#fred-sd-medium-confidence-transform-codes" title="Link to this heading">#</a></h3>
 <p>Kind: <code class="docutils literal notranslate"><span class="pre">data</span></code></p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">FRED_SD_MEDIUM_CONFIDENCE_TRANSFORM_CODES</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="mi">15</span> <span class="n">entries</span><span class="p">:</span> <span class="n">BPPRIVSA</span><span class="p">,</span> <span class="n">CONSTNQGSP</span><span class="p">,</span> <span class="n">EXPORTS</span><span class="p">,</span> <span class="n">FIRENQGSP</span><span class="p">,</span> <span class="n">GOVNQGSP</span><span class="p">,</span> <span class="n">IMPORTS</span><span class="p">,</span> <span class="n">INFONQGSP</span><span class="p">,</span> <span class="n">MANNQGSP</span><span class="p">,</span> <span class="n">NATURNQGSP</span><span class="p">,</span> <span class="n">NQGSP</span><span class="p">,</span> <span class="n">OTOT</span><span class="p">,</span> <span class="n">PSERVNQGSP</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
 </pre></div>
@@ -800,7 +800,7 @@
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.preprocess.reprocess</span></code></p>
 <section id="signature">
 <h4>Signature<a class="headerlink" href="#signature" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">reprocess</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">PreprocessInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">frequency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;keep&quot;</span><span class="p">,</span> <span class="n">quarterly_to_monthly</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;step_forward&quot;</span><span class="p">,</span> <span class="n">weekly_to_monthly</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="n">monthly_to_quarterly</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;quarterly_average&quot;</span><span class="p">,</span> <span class="n">weekly_to_quarterly</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="n">transform_order</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;after_frequency&quot;</span><span class="p">,</span> <span class="n">transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;official&quot;</span><span class="p">,</span> <span class="n">transform_codes</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">transform_code_overrides</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tcode_lag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;drop&quot;</span><span class="p">,</span> <span class="n">outliers</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;iqr&quot;</span><span class="p">,</span> <span class="n">outlier_action</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;flag_as_nan&quot;</span><span class="p">,</span> <span class="n">iqr_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">zscore_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">winsorize_quantiles</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">),</span> <span class="n">impute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;em_factor&quot;</span><span class="p">,</span> <span class="n">em_n_factors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">em_factor_selection</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;baing_p2&quot;</span><span class="p">,</span> <span class="n">em_demean</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">em_max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">em_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span> <span class="n">standardize</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">standardize_columns</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">standardize_ddof</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;keep&quot;</span><span class="p">,</span> <span class="n">warn_metadata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">custom_hooks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreprocessedData</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">reprocess</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">PreprocessInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">frequency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"keep"</span><span class="p">,</span> <span class="n">quarterly_to_monthly</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"step_forward"</span><span class="p">,</span> <span class="n">weekly_to_monthly</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"mean"</span><span class="p">,</span> <span class="n">monthly_to_quarterly</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"quarterly_average"</span><span class="p">,</span> <span class="n">weekly_to_quarterly</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"mean"</span><span class="p">,</span> <span class="n">transform_order</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"after_frequency"</span><span class="p">,</span> <span class="n">transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"official"</span><span class="p">,</span> <span class="n">transform_codes</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">transform_code_overrides</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tcode_lag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"drop"</span><span class="p">,</span> <span class="n">outliers</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"iqr"</span><span class="p">,</span> <span class="n">outlier_action</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"flag_as_nan"</span><span class="p">,</span> <span class="n">iqr_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">zscore_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">winsorize_quantiles</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">),</span> <span class="n">impute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"em_factor"</span><span class="p">,</span> <span class="n">em_n_factors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">em_factor_selection</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"baing_p2"</span><span class="p">,</span> <span class="n">em_demean</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">em_max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">em_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span> <span class="n">standardize</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"none"</span><span class="p">,</span> <span class="n">standardize_columns</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"all"</span><span class="p">,</span> <span class="n">standardize_ddof</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"keep"</span><span class="p">,</span> <span class="n">warn_metadata</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">custom_hooks</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreprocessedData</span>
 </pre></div>
 </div>
 </section>
@@ -988,17 +988,17 @@ returned metadata records the canonical direct-call names.</p>
 <h3>plan<a class="headerlink" href="#plan" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.preprocess.plan</span></code></p>
 <section id="id1">
-<h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">plan</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">PreprocessInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">frequency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;keep&quot;</span><span class="p">,</span> <span class="n">transform_order</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;after_frequency&quot;</span><span class="p">,</span> <span class="n">transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;official&quot;</span><span class="p">,</span> <span class="n">transform_codes</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">transform_code_overrides</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tcode_lag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;drop&quot;</span><span class="p">,</span> <span class="n">outliers</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;iqr&quot;</span><span class="p">,</span> <span class="n">impute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;em_factor&quot;</span><span class="p">,</span> <span class="n">standardize</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="n">standardize_columns</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">standardize_ddof</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;keep&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+<span id="signature-1"></span><h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">plan</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">PreprocessInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">frequency</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"keep"</span><span class="p">,</span> <span class="n">transform_order</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"after_frequency"</span><span class="p">,</span> <span class="n">transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"official"</span><span class="p">,</span> <span class="n">transform_codes</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">transform_code_overrides</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tcode_lag</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"drop"</span><span class="p">,</span> <span class="n">outliers</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"iqr"</span><span class="p">,</span> <span class="n">impute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"em_factor"</span><span class="p">,</span> <span class="n">standardize</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"none"</span><span class="p">,</span> <span class="n">standardize_columns</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"all"</span><span class="p">,</span> <span class="n">standardize_ddof</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">frame</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"keep"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
-<h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<span id="description-1"></span><h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
 <p>Return a dry-run summary of preprocessing choices and metadata provenance.</p>
 </section>
 <section id="id3">
-<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
+<span id="parameters-1"></span><h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1083,11 +1083,11 @@ returned metadata records the canonical direct-call names.</p>
 </div>
 </section>
 <section id="id4">
-<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
+<span id="returns-1"></span><h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
 <section id="id5">
-<h4>Minimal Use<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
+<span id="minimal-use-1"></span><h4>Minimal Use<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.plan(...)</span>
@@ -1099,17 +1099,17 @@ returned metadata records the canonical direct-call names.</p>
 <h3>report<a class="headerlink" href="#report" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.preprocess.report</span></code></p>
 <section id="id6">
-<h4>Signature<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
+<span id="signature-2"></span><h4>Signature<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">processed</span><span class="p">:</span> <span class="n">PreprocessedData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
 <section id="id7">
-<h4>Description<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
+<span id="description-2"></span><h4>Description<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
 <p>Return a compact preprocessing report from a processed object.</p>
 </section>
 <section id="id8">
-<h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
+<span id="parameters-2"></span><h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1129,11 +1129,11 @@ returned metadata records the canonical direct-call names.</p>
 </div>
 </section>
 <section id="id9">
-<h4>Returns<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
+<span id="returns-2"></span><h4>Returns<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
 <section id="id10">
-<h4>Minimal Use<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
+<span id="minimal-use-2"></span><h4>Minimal Use<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.report(...)</span>
@@ -1145,17 +1145,17 @@ returned metadata records the canonical direct-call names.</p>
 <h3>PreprocessedData<a class="headerlink" href="#preprocesseddata" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.types.PreprocessedData</span></code></p>
 <section id="id11">
-<h4>Signature<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">PreprocessedData</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">horizons</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">start</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">predictors</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">steps</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<span id="signature-3"></span><h4>Signature<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">PreprocessedData</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">horizons</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">start</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">predictors</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="s2">"all"</span><span class="p">,</span> <span class="n">steps</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id12">
-<h4>Description<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
+<span id="description-3"></span><h4>Description<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
 <p>Cleaned macroforecast panel plus metadata and data-spec choices.</p>
 </section>
 <section id="id13">
-<h4>Parameters<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
+<span id="parameters-3"></span><h4>Parameters<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1215,11 +1215,11 @@ returned metadata records the canonical direct-call names.</p>
 </div>
 </section>
 <section id="id14">
-<h4>Returns<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
+<span id="returns-3"></span><h4>Returns<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id15">
-<h4>Minimal Use<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
+<span id="minimal-use-3"></span><h4>Minimal Use<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.preprocessing.PreprocessedData(...)</span>
@@ -1299,17 +1299,17 @@ returned metadata records the canonical direct-call names.</p>
 <h3>PreprocessSpec<a class="headerlink" href="#preprocessspec" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.specs.PreprocessSpec</span></code></p>
 <section id="id16">
-<h4>Signature<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
+<span id="signature-4"></span><h4>Signature<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">PreprocessSpec</span><span class="p">(</span><span class="n">options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id17">
-<h4>Description<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
+<span id="description-4"></span><h4>Description<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
 <p>Reusable preprocessing callable for window-local forecasting runners.</p>
 </section>
 <section id="id18">
-<h4>Parameters<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
+<span id="parameters-4"></span><h4>Parameters<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1329,11 +1329,11 @@ returned metadata records the canonical direct-call names.</p>
 </div>
 </section>
 <section id="id19">
-<h4>Returns<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
+<span id="returns-4"></span><h4>Returns<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id20">
-<h4>Minimal Use<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
+<span id="minimal-use-4"></span><h4>Minimal Use<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.preprocessing.PreprocessSpec(...)</span>
@@ -1341,7 +1341,7 @@ returned metadata records the canonical direct-call names.</p>
 </div>
 </section>
 <section id="id21">
-<h4>Dataclass Fields<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
+<span id="dataclass-fields-1"></span><h4>Dataclass Fields<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -1359,7 +1359,7 @@ returned metadata records the canonical direct-call names.</p>
 </div>
 </section>
 <section id="id22">
-<h4>Public Methods<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
+<span id="public-methods-1"></span><h4>Public Methods<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Method</p></th>
@@ -1393,17 +1393,17 @@ returned metadata records the canonical direct-call names.</p>
 <h3>FittedPreprocessor<a class="headerlink" href="#fittedpreprocessor" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.specs.FittedPreprocessor</span></code></p>
 <section id="id23">
-<h4>Signature<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">FittedPreprocessor</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">PreprocessSpec</span><span class="p">,</span> <span class="n">fit_panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">fit_metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">processed_train</span><span class="p">:</span> <span class="n">PreprocessedData</span><span class="p">,</span> <span class="n">preprocessing_scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;origin_available&quot;</span><span class="p">,</span> <span class="n">standardization_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">state_panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">outlier_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">impute_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">train_after_outlier</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">custom_step_states</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<span id="signature-5"></span><h4>Signature<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">FittedPreprocessor</span><span class="p">(</span><span class="n">spec</span><span class="p">:</span> <span class="n">PreprocessSpec</span><span class="p">,</span> <span class="n">fit_panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">fit_metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">processed_train</span><span class="p">:</span> <span class="n">PreprocessedData</span><span class="p">,</span> <span class="n">preprocessing_scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"origin_available"</span><span class="p">,</span> <span class="n">standardization_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">state_panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">outlier_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">impute_state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">train_after_outlier</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">custom_step_states</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id24">
-<h4>Description<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
+<span id="description-5"></span><h4>Description<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
 <p>Preprocessing spec fitted on a training window.</p>
 </section>
 <section id="id25">
-<h4>Parameters<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
+<span id="parameters-5"></span><h4>Parameters<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1473,11 +1473,11 @@ returned metadata records the canonical direct-call names.</p>
 </div>
 </section>
 <section id="id26">
-<h4>Returns<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
+<span id="returns-5"></span><h4>Returns<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id27">
-<h4>Minimal Use<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
+<span id="minimal-use-5"></span><h4>Minimal Use<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.preprocessing.FittedPreprocessor(...)</span>
@@ -1485,7 +1485,7 @@ returned metadata records the canonical direct-call names.</p>
 </div>
 </section>
 <section id="id28">
-<h4>Dataclass Fields<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
+<span id="dataclass-fields-2"></span><h4>Dataclass Fields<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -1543,7 +1543,7 @@ returned metadata records the canonical direct-call names.</p>
 </div>
 </section>
 <section id="id29">
-<h4>Public Methods<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
+<span id="public-methods-2"></span><h4>Public Methods<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Method</p></th>
@@ -1566,16 +1566,16 @@ returned metadata records the canonical direct-call names.</p>
 </section>
 </section>
 <section id="preprocess-spec">
-<h3>preprocess_spec<a class="headerlink" href="#preprocess-spec" title="Link to this heading">#</a></h3>
+<span id="preprocess_spec"></span><h3>preprocess_spec<a class="headerlink" href="#preprocess-spec" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.specs.preprocess_spec</span></code></p>
 <section id="id30">
-<h4>Signature<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
+<span id="signature-6"></span><h4>Signature<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">preprocess_spec</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreprocessSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id31">
-<h4>Description<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
+<span id="description-6"></span><h4>Description<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
 <p>Create a reusable preprocessing specification.</p>
 <p>Keyword options are the same data-cleaning choices accepted by
 <code class="docutils literal notranslate"><span class="pre">reprocess(...)</span></code>: frequency alignment, transform-code handling,
@@ -1613,7 +1613,7 @@ prep = mf.preprocessing.preprocess_spec(
 </div></blockquote>
 </section>
 <section id="id32">
-<h4>Parameters<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
+<span id="parameters-6"></span><h4>Parameters<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1633,11 +1633,11 @@ prep = mf.preprocessing.preprocess_spec(
 </div>
 </section>
 <section id="id33">
-<h4>Returns<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
+<span id="returns-6"></span><h4>Returns<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">PreprocessSpec</span></code></p>
 </section>
 <section id="id34">
-<h4>Minimal Use<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
+<span id="minimal-use-6"></span><h4>Minimal Use<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.preprocess_spec(...)</span>
@@ -1646,20 +1646,20 @@ prep = mf.preprocessing.preprocess_spec(
 </section>
 </section>
 <section id="custom-preprocess">
-<h3>custom_preprocess<a class="headerlink" href="#custom-preprocess" title="Link to this heading">#</a></h3>
+<span id="custom_preprocess"></span><h3>custom_preprocess<a class="headerlink" href="#custom-preprocess" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.preprocess.custom_preprocess</span></code></p>
 <section id="id35">
-<h4>Signature<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
+<span id="signature-7"></span><h4>Signature<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">custom_preprocess</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">PreprocessInput</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PreprocessedData</span>
 </pre></div>
 </div>
 </section>
 <section id="id36">
-<h4>Description<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
+<span id="description-7"></span><h4>Description<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
 <p>Apply a user supplied preprocessing callable to a canonical panel.</p>
 </section>
 <section id="id37">
-<h4>Parameters<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
+<span id="parameters-7"></span><h4>Parameters<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1699,11 +1699,11 @@ prep = mf.preprocessing.preprocess_spec(
 </div>
 </section>
 <section id="id38">
-<h4>Returns<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
+<span id="returns-7"></span><h4>Returns<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">PreprocessedData</span></code></p>
 </section>
 <section id="id39">
-<h4>Minimal Use<a class="headerlink" href="#id39" title="Link to this heading">#</a></h4>
+<span id="minimal-use-7"></span><h4>Minimal Use<a class="headerlink" href="#id39" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.custom_preprocess(...)</span>
@@ -1712,21 +1712,21 @@ prep = mf.preprocessing.preprocess_spec(
 </section>
 </section>
 <section id="custom-preprocess-step">
-<h3>custom_preprocess_step<a class="headerlink" href="#custom-preprocess-step" title="Link to this heading">#</a></h3>
+<span id="custom_preprocess_step"></span><h3>custom_preprocess_step<a class="headerlink" href="#custom-preprocess-step" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.specs.custom_preprocess_step</span></code></p>
 <section id="id40">
-<h4>Signature<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">custom_preprocess_step</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">fit_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">transform_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">row_local</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">position</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;last&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+<span id="signature-8"></span><h4>Signature<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">custom_preprocess_step</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">fit_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">transform_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">row_local</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">position</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"last"</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
 <section id="id41">
-<h4>Description<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
+<span id="description-8"></span><h4>Description<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
 <p>Return a custom preprocessing step for <code class="docutils literal notranslate"><span class="pre">preprocess_spec(custom_steps=...)</span></code>.</p>
 <p>There are two ways to write a step, and which one you need depends on
 whether it aggregates.</p>
 <p><strong>Row-local</strong> – each output row depends only on the same input row::</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>custom_preprocess_step(&quot;log1p&quot;, log1p_step, row_local=True)
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>custom_preprocess_step("log1p", log1p_step, row_local=True)
 </pre></div>
 </div>
 <p>A log, a ratio between two columns, a sign: nothing that looks along the
@@ -1735,7 +1735,7 @@ frame cannot change a row that was already there. Declare <code class="docutils 
 to say so.</p>
 <p><strong>Stateful</strong> – the step derives something from the sample first::</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>custom_preprocess_step(
-    &quot;winsorize&quot;,
+    "winsorize",
     fit_func=fit_bounds,        # (panel, metadata, **params) -&gt; state
     transform_func=apply_bounds,  # (panel, state=..., metadata=..., **params) -&gt; panel
 )
@@ -1763,7 +1763,7 @@ digest, the runner skips disk get/put for specs containing the callable and
 recomputes instead of risking stale reuse.</p>
 </section>
 <section id="id42">
-<h4>Parameters<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
+<span id="parameters-8"></span><h4>Parameters<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1813,11 +1813,11 @@ recomputes instead of risking stale reuse.</p>
 </div>
 </section>
 <section id="id43">
-<h4>Returns<a class="headerlink" href="#id43" title="Link to this heading">#</a></h4>
+<span id="returns-8"></span><h4>Returns<a class="headerlink" href="#id43" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
 <section id="id44">
-<h4>Minimal Use<a class="headerlink" href="#id44" title="Link to this heading">#</a></h4>
+<span id="minimal-use-8"></span><h4>Minimal Use<a class="headerlink" href="#id44" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.custom_preprocess_step(...)</span>
@@ -1826,20 +1826,20 @@ recomputes instead of risking stale reuse.</p>
 </section>
 </section>
 <section id="apply-transform-codes">
-<h3>apply_transform_codes<a class="headerlink" href="#apply-transform-codes" title="Link to this heading">#</a></h3>
+<span id="apply_transform_codes"></span><h3>apply_transform_codes<a class="headerlink" href="#apply-transform-codes" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.preprocess.apply_transform_codes</span></code></p>
 <section id="id45">
-<h4>Signature<a class="headerlink" href="#id45" title="Link to this heading">#</a></h4>
+<span id="signature-9"></span><h4>Signature<a class="headerlink" href="#id45" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">apply_transform_codes</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">codes</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id46">
-<h4>Description<a class="headerlink" href="#id46" title="Link to this heading">#</a></h4>
+<span id="description-9"></span><h4>Description<a class="headerlink" href="#id46" title="Link to this heading">#</a></h4>
 <p>Apply McCracken-Ng transform codes to matching panel columns.</p>
 </section>
 <section id="id47">
-<h4>Parameters<a class="headerlink" href="#id47" title="Link to this heading">#</a></h4>
+<span id="parameters-9"></span><h4>Parameters<a class="headerlink" href="#id47" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1864,11 +1864,11 @@ recomputes instead of risking stale reuse.</p>
 </div>
 </section>
 <section id="id48">
-<h4>Returns<a class="headerlink" href="#id48" title="Link to this heading">#</a></h4>
+<span id="returns-9"></span><h4>Returns<a class="headerlink" href="#id48" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id49">
-<h4>Minimal Use<a class="headerlink" href="#id49" title="Link to this heading">#</a></h4>
+<span id="minimal-use-9"></span><h4>Minimal Use<a class="headerlink" href="#id49" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.apply_transform_codes(...)</span>
@@ -1877,22 +1877,22 @@ recomputes instead of risking stale reuse.</p>
 </section>
 </section>
 <section id="fred-sd-transform-codes">
-<h3>fred_sd_transform_codes<a class="headerlink" href="#fred-sd-transform-codes" title="Link to this heading">#</a></h3>
+<span id="fred_sd_transform_codes"></span><h3>fred_sd_transform_codes<a class="headerlink" href="#fred-sd-transform-codes" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.preprocess.fred_sd_transform_codes</span></code></p>
 <section id="id50">
-<h4>Signature<a class="headerlink" href="#id50" title="Link to this heading">#</a></h4>
+<span id="signature-10"></span><h4>Signature<a class="headerlink" href="#id50" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">fred_sd_transform_codes</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">PreprocessInput</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variable_codes</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">state_series_codes</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">use_national_analog_suggestions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_medium_confidence</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">return_table</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
 <section id="id51">
-<h4>Description<a class="headerlink" href="#id51" title="Link to this heading">#</a></h4>
+<span id="description-10"></span><h4>Description<a class="headerlink" href="#id51" title="Link to this heading">#</a></h4>
 <p>Build FRED-SD t-code choices for state-series columns.</p>
 <p>FRED-SD does not publish official t-codes. The built-in suggestions are
 national-analog defaults, not official transformations.</p>
 </section>
 <section id="id52">
-<h4>Parameters<a class="headerlink" href="#id52" title="Link to this heading">#</a></h4>
+<span id="parameters-10"></span><h4>Parameters<a class="headerlink" href="#id52" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1937,11 +1937,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id53">
-<h4>Returns<a class="headerlink" href="#id53" title="Link to this heading">#</a></h4>
+<span id="returns-10"></span><h4>Returns<a class="headerlink" href="#id53" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">int]</span> <span class="pre">|</span> <span class="pre">tuple[dict[str,</span> <span class="pre">int],</span> <span class="pre">pd.DataFrame]</span></code></p>
 </section>
 <section id="id54">
-<h4>Minimal Use<a class="headerlink" href="#id54" title="Link to this heading">#</a></h4>
+<span id="minimal-use-10"></span><h4>Minimal Use<a class="headerlink" href="#id54" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.fred_sd_transform_codes(...)</span>
@@ -1950,20 +1950,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="handle-tcode-lag">
-<h3>handle_tcode_lag<a class="headerlink" href="#handle-tcode-lag" title="Link to this heading">#</a></h3>
+<span id="handle_tcode_lag"></span><h3>handle_tcode_lag<a class="headerlink" href="#handle-tcode-lag" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.preprocess.handle_tcode_lag</span></code></p>
 <section id="id55">
-<h4>Signature<a class="headerlink" href="#id55" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">handle_tcode_lag</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;drop&quot;</span><span class="p">,</span> <span class="n">codes</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-11"></span><h4>Signature<a class="headerlink" href="#id55" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">handle_tcode_lag</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"drop"</span><span class="p">,</span> <span class="n">codes</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id56">
-<h4>Description<a class="headerlink" href="#id56" title="Link to this heading">#</a></h4>
+<span id="description-11"></span><h4>Description<a class="headerlink" href="#id56" title="Link to this heading">#</a></h4>
 <p>Handle missing values introduced by stationarity transforms.</p>
 </section>
 <section id="id57">
-<h4>Parameters<a class="headerlink" href="#id57" title="Link to this heading">#</a></h4>
+<span id="parameters-11"></span><h4>Parameters<a class="headerlink" href="#id57" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1993,11 +1993,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id58">
-<h4>Returns<a class="headerlink" href="#id58" title="Link to this heading">#</a></h4>
+<span id="returns-11"></span><h4>Returns<a class="headerlink" href="#id58" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id59">
-<h4>Minimal Use<a class="headerlink" href="#id59" title="Link to this heading">#</a></h4>
+<span id="minimal-use-11"></span><h4>Minimal Use<a class="headerlink" href="#id59" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.handle_tcode_lag(...)</span>
@@ -2006,20 +2006,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="handle-outliers">
-<h3>handle_outliers<a class="headerlink" href="#handle-outliers" title="Link to this heading">#</a></h3>
+<span id="handle_outliers"></span><h3>handle_outliers<a class="headerlink" href="#handle-outliers" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.preprocess.handle_outliers</span></code></p>
 <section id="id60">
-<h4>Signature<a class="headerlink" href="#id60" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">handle_outliers</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;iqr&quot;</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;flag_as_nan&quot;</span><span class="p">,</span> <span class="n">iqr_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">zscore_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">winsorize_quantiles</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-12"></span><h4>Signature<a class="headerlink" href="#id60" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">handle_outliers</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"iqr"</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"flag_as_nan"</span><span class="p">,</span> <span class="n">iqr_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">zscore_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">winsorize_quantiles</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id61">
-<h4>Description<a class="headerlink" href="#id61" title="Link to this heading">#</a></h4>
+<span id="description-12"></span><h4>Description<a class="headerlink" href="#id61" title="Link to this heading">#</a></h4>
 <p>Apply one outlier policy to a panel.</p>
 </section>
 <section id="id62">
-<h4>Parameters<a class="headerlink" href="#id62" title="Link to this heading">#</a></h4>
+<span id="parameters-12"></span><h4>Parameters<a class="headerlink" href="#id62" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2064,11 +2064,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id63">
-<h4>Returns<a class="headerlink" href="#id63" title="Link to this heading">#</a></h4>
+<span id="returns-12"></span><h4>Returns<a class="headerlink" href="#id63" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id64">
-<h4>Minimal Use<a class="headerlink" href="#id64" title="Link to this heading">#</a></h4>
+<span id="minimal-use-12"></span><h4>Minimal Use<a class="headerlink" href="#id64" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.handle_outliers(...)</span>
@@ -2077,20 +2077,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="impute-missing">
-<h3>impute_missing<a class="headerlink" href="#impute-missing" title="Link to this heading">#</a></h3>
+<span id="impute_missing"></span><h3>impute_missing<a class="headerlink" href="#impute-missing" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.preprocess.impute_missing</span></code></p>
 <section id="id65">
-<h4>Signature<a class="headerlink" href="#id65" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">impute_missing</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;em_factor&quot;</span><span class="p">,</span> <span class="n">em_n_factors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">em_factor_selection</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;baing_p2&quot;</span><span class="p">,</span> <span class="n">em_demean</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">em_max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">em_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-13"></span><h4>Signature<a class="headerlink" href="#id65" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">impute_missing</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"em_factor"</span><span class="p">,</span> <span class="n">em_n_factors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">em_factor_selection</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"baing_p2"</span><span class="p">,</span> <span class="n">em_demean</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">em_max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">em_tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id66">
-<h4>Description<a class="headerlink" href="#id66" title="Link to this heading">#</a></h4>
+<span id="description-13"></span><h4>Description<a class="headerlink" href="#id66" title="Link to this heading">#</a></h4>
 <p>Fill missing panel values with the selected imputation method.</p>
 </section>
 <section id="id67">
-<h4>Parameters<a class="headerlink" href="#id67" title="Link to this heading">#</a></h4>
+<span id="parameters-13"></span><h4>Parameters<a class="headerlink" href="#id67" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2140,11 +2140,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id68">
-<h4>Returns<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
+<span id="returns-13"></span><h4>Returns<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id69">
-<h4>Minimal Use<a class="headerlink" href="#id69" title="Link to this heading">#</a></h4>
+<span id="minimal-use-13"></span><h4>Minimal Use<a class="headerlink" href="#id69" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.impute_missing(...)</span>
@@ -2153,20 +2153,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="standardize-panel">
-<h3>standardize_panel<a class="headerlink" href="#standardize-panel" title="Link to this heading">#</a></h3>
+<span id="standardize_panel"></span><h3>standardize_panel<a class="headerlink" href="#standardize-panel" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.preprocess.standardize_panel</span></code></p>
 <section id="id70">
-<h4>Signature<a class="headerlink" href="#id70" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">standardize_panel</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;zscore&quot;</span><span class="p">,</span> <span class="n">ddof</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">standardize_scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;fit_window&quot;</span><span class="p">,</span> <span class="n">available</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">predictors</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nan_policy</span><span class="p">:</span> <span class="s2">&quot;Literal[&#39;propagate&#39;, &#39;zero_after_standardize&#39;]&quot;</span> <span class="o">=</span> <span class="s2">&quot;propagate&quot;</span><span class="p">,</span> <span class="n">standardize_nan_fill</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-14"></span><h4>Signature<a class="headerlink" href="#id70" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">standardize_panel</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"zscore"</span><span class="p">,</span> <span class="n">ddof</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">standardize_scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"fit_window"</span><span class="p">,</span> <span class="n">available</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"all"</span><span class="p">,</span> <span class="n">predictors</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"all"</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nan_policy</span><span class="p">:</span> <span class="s2">"Literal['propagate', 'zero_after_standardize']"</span> <span class="o">=</span> <span class="s2">"propagate"</span><span class="p">,</span> <span class="n">standardize_nan_fill</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id71">
-<h4>Description<a class="headerlink" href="#id71" title="Link to this heading">#</a></h4>
+<span id="description-14"></span><h4>Description<a class="headerlink" href="#id71" title="Link to this heading">#</a></h4>
 <p>Standardize numeric columns with fitted parameters.</p>
 </section>
 <section id="id72">
-<h4>Parameters<a class="headerlink" href="#id72" title="Link to this heading">#</a></h4>
+<span id="parameters-14"></span><h4>Parameters<a class="headerlink" href="#id72" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2236,11 +2236,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id73">
-<h4>Returns<a class="headerlink" href="#id73" title="Link to this heading">#</a></h4>
+<span id="returns-14"></span><h4>Returns<a class="headerlink" href="#id73" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id74">
-<h4>Minimal Use<a class="headerlink" href="#id74" title="Link to this heading">#</a></h4>
+<span id="minimal-use-14"></span><h4>Minimal Use<a class="headerlink" href="#id74" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.standardize_panel(...)</span>
@@ -2249,20 +2249,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="handle-frame-edges">
-<h3>handle_frame_edges<a class="headerlink" href="#handle-frame-edges" title="Link to this heading">#</a></h3>
+<span id="handle_frame_edges"></span><h3>handle_frame_edges<a class="headerlink" href="#handle-frame-edges" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.preprocess.handle_frame_edges</span></code></p>
 <section id="id75">
-<h4>Signature<a class="headerlink" href="#id75" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">handle_frame_edges</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;keep&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-15"></span><h4>Signature<a class="headerlink" href="#id75" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">handle_frame_edges</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"keep"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id76">
-<h4>Description<a class="headerlink" href="#id76" title="Link to this heading">#</a></h4>
+<span id="description-15"></span><h4>Description<a class="headerlink" href="#id76" title="Link to this heading">#</a></h4>
 <p>Handle remaining unbalanced panel edges.</p>
 </section>
 <section id="id77">
-<h4>Parameters<a class="headerlink" href="#id77" title="Link to this heading">#</a></h4>
+<span id="parameters-15"></span><h4>Parameters<a class="headerlink" href="#id77" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2287,11 +2287,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id78">
-<h4>Returns<a class="headerlink" href="#id78" title="Link to this heading">#</a></h4>
+<span id="returns-15"></span><h4>Returns<a class="headerlink" href="#id78" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id79">
-<h4>Minimal Use<a class="headerlink" href="#id79" title="Link to this heading">#</a></h4>
+<span id="minimal-use-15"></span><h4>Minimal Use<a class="headerlink" href="#id79" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.handle_frame_edges(...)</span>
@@ -2300,20 +2300,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="iqr-outlier-clean">
-<h3>iqr_outlier_clean<a class="headerlink" href="#iqr-outlier-clean" title="Link to this heading">#</a></h3>
+<span id="iqr_outlier_clean"></span><h3>iqr_outlier_clean<a class="headerlink" href="#iqr-outlier-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.iqr_outlier_clean</span></code></p>
 <section id="id80">
-<h4>Signature<a class="headerlink" href="#id80" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">iqr_outlier_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;flag_as_nan&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-16"></span><h4>Signature<a class="headerlink" href="#id80" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">iqr_outlier_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"flag_as_nan"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id81">
-<h4>Description<a class="headerlink" href="#id81" title="Link to this heading">#</a></h4>
+<span id="description-16"></span><h4>Description<a class="headerlink" href="#id81" title="Link to this heading">#</a></h4>
 <p>Flag or replace outliers with a per-column IQR rule.</p>
 </section>
 <section id="id82">
-<h4>Parameters<a class="headerlink" href="#id82" title="Link to this heading">#</a></h4>
+<span id="parameters-16"></span><h4>Parameters<a class="headerlink" href="#id82" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2343,11 +2343,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id83">
-<h4>Returns<a class="headerlink" href="#id83" title="Link to this heading">#</a></h4>
+<span id="returns-16"></span><h4>Returns<a class="headerlink" href="#id83" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id84">
-<h4>Minimal Use<a class="headerlink" href="#id84" title="Link to this heading">#</a></h4>
+<span id="minimal-use-16"></span><h4>Minimal Use<a class="headerlink" href="#id84" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.iqr_outlier_clean(...)</span>
@@ -2356,20 +2356,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="zscore-outlier-clean">
-<h3>zscore_outlier_clean<a class="headerlink" href="#zscore-outlier-clean" title="Link to this heading">#</a></h3>
+<span id="zscore_outlier_clean"></span><h3>zscore_outlier_clean<a class="headerlink" href="#zscore-outlier-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.zscore_outlier_clean</span></code></p>
 <section id="id85">
-<h4>Signature<a class="headerlink" href="#id85" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">zscore_outlier_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;flag_as_nan&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-17"></span><h4>Signature<a class="headerlink" href="#id85" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">zscore_outlier_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">action</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"flag_as_nan"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id86">
-<h4>Description<a class="headerlink" href="#id86" title="Link to this heading">#</a></h4>
+<span id="description-17"></span><h4>Description<a class="headerlink" href="#id86" title="Link to this heading">#</a></h4>
 <p>Flag or replace outliers with a per-column z-score rule.</p>
 </section>
 <section id="id87">
-<h4>Parameters<a class="headerlink" href="#id87" title="Link to this heading">#</a></h4>
+<span id="parameters-17"></span><h4>Parameters<a class="headerlink" href="#id87" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2399,11 +2399,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id88">
-<h4>Returns<a class="headerlink" href="#id88" title="Link to this heading">#</a></h4>
+<span id="returns-17"></span><h4>Returns<a class="headerlink" href="#id88" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id89">
-<h4>Minimal Use<a class="headerlink" href="#id89" title="Link to this heading">#</a></h4>
+<span id="minimal-use-17"></span><h4>Minimal Use<a class="headerlink" href="#id89" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.zscore_outlier_clean(...)</span>
@@ -2412,20 +2412,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="winsorize-clean">
-<h3>winsorize_clean<a class="headerlink" href="#winsorize-clean" title="Link to this heading">#</a></h3>
+<span id="winsorize_clean"></span><h3>winsorize_clean<a class="headerlink" href="#winsorize-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.winsorize_clean</span></code></p>
 <section id="id90">
-<h4>Signature<a class="headerlink" href="#id90" title="Link to this heading">#</a></h4>
+<span id="signature-18"></span><h4>Signature<a class="headerlink" href="#id90" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">winsorize_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">lower_quantile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span> <span class="n">upper_quantile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id91">
-<h4>Description<a class="headerlink" href="#id91" title="Link to this heading">#</a></h4>
+<span id="description-18"></span><h4>Description<a class="headerlink" href="#id91" title="Link to this heading">#</a></h4>
 <p>Clip numeric columns to quantile bounds.</p>
 </section>
 <section id="id92">
-<h4>Parameters<a class="headerlink" href="#id92" title="Link to this heading">#</a></h4>
+<span id="parameters-18"></span><h4>Parameters<a class="headerlink" href="#id92" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2455,11 +2455,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id93">
-<h4>Returns<a class="headerlink" href="#id93" title="Link to this heading">#</a></h4>
+<span id="returns-18"></span><h4>Returns<a class="headerlink" href="#id93" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id94">
-<h4>Minimal Use<a class="headerlink" href="#id94" title="Link to this heading">#</a></h4>
+<span id="minimal-use-18"></span><h4>Minimal Use<a class="headerlink" href="#id94" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.winsorize_clean(...)</span>
@@ -2468,20 +2468,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="em-factor-impute-clean">
-<h3>em_factor_impute_clean<a class="headerlink" href="#em-factor-impute-clean" title="Link to this heading">#</a></h3>
+<span id="em_factor_impute_clean"></span><h3>em_factor_impute_clean<a class="headerlink" href="#em-factor-impute-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.em_factor_impute_clean</span></code></p>
 <section id="id95">
-<h4>Signature<a class="headerlink" href="#id95" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">em_factor_impute_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_factors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span> <span class="n">factor_selection</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;baing_p2&quot;</span><span class="p">,</span> <span class="n">demean</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-19"></span><h4>Signature<a class="headerlink" href="#id95" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">em_factor_impute_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_factors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-06</span><span class="p">,</span> <span class="n">factor_selection</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"baing_p2"</span><span class="p">,</span> <span class="n">demean</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id96">
-<h4>Description<a class="headerlink" href="#id96" title="Link to this heading">#</a></h4>
+<span id="description-19"></span><h4>Description<a class="headerlink" href="#id96" title="Link to this heading">#</a></h4>
 <p>Impute missing numeric cells with PCA-EM factor reconstruction.</p>
 </section>
 <section id="id97">
-<h4>Parameters<a class="headerlink" href="#id97" title="Link to this heading">#</a></h4>
+<span id="parameters-19"></span><h4>Parameters<a class="headerlink" href="#id97" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2526,11 +2526,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id98">
-<h4>Returns<a class="headerlink" href="#id98" title="Link to this heading">#</a></h4>
+<span id="returns-19"></span><h4>Returns<a class="headerlink" href="#id98" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id99">
-<h4>Minimal Use<a class="headerlink" href="#id99" title="Link to this heading">#</a></h4>
+<span id="minimal-use-19"></span><h4>Minimal Use<a class="headerlink" href="#id99" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.em_factor_impute_clean(...)</span>
@@ -2539,20 +2539,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="em-multivariate-impute-clean">
-<h3>em_multivariate_impute_clean<a class="headerlink" href="#em-multivariate-impute-clean" title="Link to this heading">#</a></h3>
+<span id="em_multivariate_impute_clean"></span><h3>em_multivariate_impute_clean<a class="headerlink" href="#em-multivariate-impute-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.em_multivariate_impute_clean</span></code></p>
 <section id="id100">
-<h4>Signature<a class="headerlink" href="#id100" title="Link to this heading">#</a></h4>
+<span id="signature-20"></span><h4>Signature<a class="headerlink" href="#id100" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">em_multivariate_impute_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0001</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id101">
-<h4>Description<a class="headerlink" href="#id101" title="Link to this heading">#</a></h4>
+<span id="description-20"></span><h4>Description<a class="headerlink" href="#id101" title="Link to this heading">#</a></h4>
 <p>Impute missing numeric cells with an uncapped PCA-EM rank rule.</p>
 </section>
 <section id="id102">
-<h4>Parameters<a class="headerlink" href="#id102" title="Link to this heading">#</a></h4>
+<span id="parameters-20"></span><h4>Parameters<a class="headerlink" href="#id102" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2582,11 +2582,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id103">
-<h4>Returns<a class="headerlink" href="#id103" title="Link to this heading">#</a></h4>
+<span id="returns-20"></span><h4>Returns<a class="headerlink" href="#id103" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id104">
-<h4>Minimal Use<a class="headerlink" href="#id104" title="Link to this heading">#</a></h4>
+<span id="minimal-use-20"></span><h4>Minimal Use<a class="headerlink" href="#id104" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.em_multivariate_impute_clean(...)</span>
@@ -2595,20 +2595,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="mean-impute-clean">
-<h3>mean_impute_clean<a class="headerlink" href="#mean-impute-clean" title="Link to this heading">#</a></h3>
+<span id="mean_impute_clean"></span><h3>mean_impute_clean<a class="headerlink" href="#mean-impute-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.mean_impute_clean</span></code></p>
 <section id="id105">
-<h4>Signature<a class="headerlink" href="#id105" title="Link to this heading">#</a></h4>
+<span id="signature-21"></span><h4>Signature<a class="headerlink" href="#id105" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">mean_impute_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id106">
-<h4>Description<a class="headerlink" href="#id106" title="Link to this heading">#</a></h4>
+<span id="description-21"></span><h4>Description<a class="headerlink" href="#id106" title="Link to this heading">#</a></h4>
 <p>Replace missing numeric cells with full-column means.</p>
 </section>
 <section id="id107">
-<h4>Parameters<a class="headerlink" href="#id107" title="Link to this heading">#</a></h4>
+<span id="parameters-21"></span><h4>Parameters<a class="headerlink" href="#id107" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2628,11 +2628,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id108">
-<h4>Returns<a class="headerlink" href="#id108" title="Link to this heading">#</a></h4>
+<span id="returns-21"></span><h4>Returns<a class="headerlink" href="#id108" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id109">
-<h4>Minimal Use<a class="headerlink" href="#id109" title="Link to this heading">#</a></h4>
+<span id="minimal-use-21"></span><h4>Minimal Use<a class="headerlink" href="#id109" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.mean_impute_clean(...)</span>
@@ -2641,20 +2641,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="forward-fill-clean">
-<h3>forward_fill_clean<a class="headerlink" href="#forward-fill-clean" title="Link to this heading">#</a></h3>
+<span id="forward_fill_clean"></span><h3>forward_fill_clean<a class="headerlink" href="#forward-fill-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.forward_fill_clean</span></code></p>
 <section id="id110">
-<h4>Signature<a class="headerlink" href="#id110" title="Link to this heading">#</a></h4>
+<span id="signature-22"></span><h4>Signature<a class="headerlink" href="#id110" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">forward_fill_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id111">
-<h4>Description<a class="headerlink" href="#id111" title="Link to this heading">#</a></h4>
+<span id="description-22"></span><h4>Description<a class="headerlink" href="#id111" title="Link to this heading">#</a></h4>
 <p>Carry each series’ most recent observed value forward.</p>
 </section>
 <section id="id112">
-<h4>Parameters<a class="headerlink" href="#id112" title="Link to this heading">#</a></h4>
+<span id="parameters-22"></span><h4>Parameters<a class="headerlink" href="#id112" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2674,11 +2674,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id113">
-<h4>Returns<a class="headerlink" href="#id113" title="Link to this heading">#</a></h4>
+<span id="returns-22"></span><h4>Returns<a class="headerlink" href="#id113" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id114">
-<h4>Minimal Use<a class="headerlink" href="#id114" title="Link to this heading">#</a></h4>
+<span id="minimal-use-22"></span><h4>Minimal Use<a class="headerlink" href="#id114" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.forward_fill_clean(...)</span>
@@ -2687,20 +2687,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="linear-interpolate-clean">
-<h3>linear_interpolate_clean<a class="headerlink" href="#linear-interpolate-clean" title="Link to this heading">#</a></h3>
+<span id="linear_interpolate_clean"></span><h3>linear_interpolate_clean<a class="headerlink" href="#linear-interpolate-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.linear_interpolate_clean</span></code></p>
 <section id="id115">
-<h4>Signature<a class="headerlink" href="#id115" title="Link to this heading">#</a></h4>
+<span id="signature-23"></span><h4>Signature<a class="headerlink" href="#id115" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">linear_interpolate_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id116">
-<h4>Description<a class="headerlink" href="#id116" title="Link to this heading">#</a></h4>
+<span id="description-23"></span><h4>Description<a class="headerlink" href="#id116" title="Link to this heading">#</a></h4>
 <p>Fill interior missing values by linear interpolation.</p>
 </section>
 <section id="id117">
-<h4>Parameters<a class="headerlink" href="#id117" title="Link to this heading">#</a></h4>
+<span id="parameters-23"></span><h4>Parameters<a class="headerlink" href="#id117" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2720,11 +2720,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id118">
-<h4>Returns<a class="headerlink" href="#id118" title="Link to this heading">#</a></h4>
+<span id="returns-23"></span><h4>Returns<a class="headerlink" href="#id118" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id119">
-<h4>Minimal Use<a class="headerlink" href="#id119" title="Link to this heading">#</a></h4>
+<span id="minimal-use-23"></span><h4>Minimal Use<a class="headerlink" href="#id119" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.linear_interpolate_clean(...)</span>
@@ -2733,20 +2733,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="truncate-to-balanced-clean">
-<h3>truncate_to_balanced_clean<a class="headerlink" href="#truncate-to-balanced-clean" title="Link to this heading">#</a></h3>
+<span id="truncate_to_balanced_clean"></span><h3>truncate_to_balanced_clean<a class="headerlink" href="#truncate-to-balanced-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.truncate_to_balanced_clean</span></code></p>
 <section id="id120">
-<h4>Signature<a class="headerlink" href="#id120" title="Link to this heading">#</a></h4>
+<span id="signature-24"></span><h4>Signature<a class="headerlink" href="#id120" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">truncate_to_balanced_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id121">
-<h4>Description<a class="headerlink" href="#id121" title="Link to this heading">#</a></h4>
+<span id="description-24"></span><h4>Description<a class="headerlink" href="#id121" title="Link to this heading">#</a></h4>
 <p>Keep only rows with no missing values.</p>
 </section>
 <section id="id122">
-<h4>Parameters<a class="headerlink" href="#id122" title="Link to this heading">#</a></h4>
+<span id="parameters-24"></span><h4>Parameters<a class="headerlink" href="#id122" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2766,11 +2766,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id123">
-<h4>Returns<a class="headerlink" href="#id123" title="Link to this heading">#</a></h4>
+<span id="returns-24"></span><h4>Returns<a class="headerlink" href="#id123" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id124">
-<h4>Minimal Use<a class="headerlink" href="#id124" title="Link to this heading">#</a></h4>
+<span id="minimal-use-24"></span><h4>Minimal Use<a class="headerlink" href="#id124" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.truncate_to_balanced_clean(...)</span>
@@ -2779,20 +2779,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="drop-unbalanced-series-clean">
-<h3>drop_unbalanced_series_clean<a class="headerlink" href="#drop-unbalanced-series-clean" title="Link to this heading">#</a></h3>
+<span id="drop_unbalanced_series_clean"></span><h3>drop_unbalanced_series_clean<a class="headerlink" href="#drop-unbalanced-series-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.drop_unbalanced_series_clean</span></code></p>
 <section id="id125">
-<h4>Signature<a class="headerlink" href="#id125" title="Link to this heading">#</a></h4>
+<span id="signature-25"></span><h4>Signature<a class="headerlink" href="#id125" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">drop_unbalanced_series_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id126">
-<h4>Description<a class="headerlink" href="#id126" title="Link to this heading">#</a></h4>
+<span id="description-25"></span><h4>Description<a class="headerlink" href="#id126" title="Link to this heading">#</a></h4>
 <p>Keep only columns with no missing values.</p>
 </section>
 <section id="id127">
-<h4>Parameters<a class="headerlink" href="#id127" title="Link to this heading">#</a></h4>
+<span id="parameters-25"></span><h4>Parameters<a class="headerlink" href="#id127" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2812,11 +2812,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id128">
-<h4>Returns<a class="headerlink" href="#id128" title="Link to this heading">#</a></h4>
+<span id="returns-25"></span><h4>Returns<a class="headerlink" href="#id128" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id129">
-<h4>Minimal Use<a class="headerlink" href="#id129" title="Link to this heading">#</a></h4>
+<span id="minimal-use-25"></span><h4>Minimal Use<a class="headerlink" href="#id129" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.drop_unbalanced_series_clean(...)</span>
@@ -2825,20 +2825,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="zero-fill-leading-clean">
-<h3>zero_fill_leading_clean<a class="headerlink" href="#zero-fill-leading-clean" title="Link to this heading">#</a></h3>
+<span id="zero_fill_leading_clean"></span><h3>zero_fill_leading_clean<a class="headerlink" href="#zero-fill-leading-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.zero_fill_leading_clean</span></code></p>
 <section id="id130">
-<h4>Signature<a class="headerlink" href="#id130" title="Link to this heading">#</a></h4>
+<span id="signature-26"></span><h4>Signature<a class="headerlink" href="#id130" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">zero_fill_leading_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id131">
-<h4>Description<a class="headerlink" href="#id131" title="Link to this heading">#</a></h4>
+<span id="description-26"></span><h4>Description<a class="headerlink" href="#id131" title="Link to this heading">#</a></h4>
 <p>Replace remaining missing cells with zero.</p>
 </section>
 <section id="id132">
-<h4>Parameters<a class="headerlink" href="#id132" title="Link to this heading">#</a></h4>
+<span id="parameters-26"></span><h4>Parameters<a class="headerlink" href="#id132" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2858,11 +2858,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id133">
-<h4>Returns<a class="headerlink" href="#id133" title="Link to this heading">#</a></h4>
+<span id="returns-26"></span><h4>Returns<a class="headerlink" href="#id133" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id134">
-<h4>Minimal Use<a class="headerlink" href="#id134" title="Link to this heading">#</a></h4>
+<span id="minimal-use-26"></span><h4>Minimal Use<a class="headerlink" href="#id134" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.zero_fill_leading_clean(...)</span>
@@ -2871,20 +2871,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="fit-standardization-state">
-<h3>fit_standardization_state<a class="headerlink" href="#fit-standardization-state" title="Link to this heading">#</a></h3>
+<span id="fit_standardization_state"></span><h3>fit_standardization_state<a class="headerlink" href="#fit-standardization-state" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.fit_standardization_state</span></code></p>
 <section id="id135">
-<h4>Signature<a class="headerlink" href="#id135" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">fit_standardization_state</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;zscore&quot;</span><span class="p">,</span> <span class="n">ddof</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span>
+<span id="signature-27"></span><h4>Signature<a class="headerlink" href="#id135" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">fit_standardization_state</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"zscore"</span><span class="p">,</span> <span class="n">ddof</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
 <section id="id136">
-<h4>Description<a class="headerlink" href="#id136" title="Link to this heading">#</a></h4>
+<span id="description-27"></span><h4>Description<a class="headerlink" href="#id136" title="Link to this heading">#</a></h4>
 <p>Fit column-wise scaling parameters on a numeric panel.</p>
 </section>
 <section id="id137">
-<h4>Parameters<a class="headerlink" href="#id137" title="Link to this heading">#</a></h4>
+<span id="parameters-27"></span><h4>Parameters<a class="headerlink" href="#id137" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2914,11 +2914,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id138">
-<h4>Returns<a class="headerlink" href="#id138" title="Link to this heading">#</a></h4>
+<span id="returns-27"></span><h4>Returns<a class="headerlink" href="#id138" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">object]</span></code></p>
 </section>
 <section id="id139">
-<h4>Minimal Use<a class="headerlink" href="#id139" title="Link to this heading">#</a></h4>
+<span id="minimal-use-27"></span><h4>Minimal Use<a class="headerlink" href="#id139" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.fit_standardization_state(...)</span>
@@ -2927,20 +2927,20 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="apply-standardization-state">
-<h3>apply_standardization_state<a class="headerlink" href="#apply-standardization-state" title="Link to this heading">#</a></h3>
+<span id="apply_standardization_state"></span><h3>apply_standardization_state<a class="headerlink" href="#apply-standardization-state" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.apply_standardization_state</span></code></p>
 <section id="id140">
-<h4>Signature<a class="headerlink" href="#id140" title="Link to this heading">#</a></h4>
+<span id="signature-28"></span><h4>Signature<a class="headerlink" href="#id140" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">apply_standardization_state</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id141">
-<h4>Description<a class="headerlink" href="#id141" title="Link to this heading">#</a></h4>
+<span id="description-28"></span><h4>Description<a class="headerlink" href="#id141" title="Link to this heading">#</a></h4>
 <p>Apply fitted column-wise scaling parameters to a panel.</p>
 </section>
 <section id="id142">
-<h4>Parameters<a class="headerlink" href="#id142" title="Link to this heading">#</a></h4>
+<span id="parameters-28"></span><h4>Parameters<a class="headerlink" href="#id142" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2965,11 +2965,11 @@ national-analog defaults, not official transformations.</p>
 </div>
 </section>
 <section id="id143">
-<h4>Returns<a class="headerlink" href="#id143" title="Link to this heading">#</a></h4>
+<span id="returns-28"></span><h4>Returns<a class="headerlink" href="#id143" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id144">
-<h4>Minimal Use<a class="headerlink" href="#id144" title="Link to this heading">#</a></h4>
+<span id="minimal-use-28"></span><h4>Minimal Use<a class="headerlink" href="#id144" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.apply_standardization_state(...)</span>
@@ -2978,16 +2978,16 @@ national-analog defaults, not official transformations.</p>
 </section>
 </section>
 <section id="box-cox-clean">
-<h3>box_cox_clean<a class="headerlink" href="#box-cox-clean" title="Link to this heading">#</a></h3>
+<span id="box_cox_clean"></span><h3>box_cox_clean<a class="headerlink" href="#box-cox-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.box_cox_clean</span></code></p>
 <section id="id145">
-<h4>Signature<a class="headerlink" href="#id145" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">box_cox_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">lmbda</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;loglik&quot;</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-29"></span><h4>Signature<a class="headerlink" href="#id145" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">box_cox_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">lmbda</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"loglik"</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id146">
-<h4>Description<a class="headerlink" href="#id146" title="Link to this heading">#</a></h4>
+<span id="description-29"></span><h4>Description<a class="headerlink" href="#id146" title="Link to this heading">#</a></h4>
 <p>Apply a Box-Cox variance-stabilising transform to each numeric column.</p>
 <p>When <code class="docutils literal notranslate"><span class="pre">lmbda</span></code> is None the parameter is selected per column by <code class="docutils literal notranslate"><span class="pre">method</span></code>
 (‘loglik’ or ‘guerrero’); the chosen lambdas are recorded in
@@ -2995,7 +2995,7 @@ national-analog defaults, not official transformations.</p>
 positive.</p>
 </section>
 <section id="id147">
-<h4>Parameters<a class="headerlink" href="#id147" title="Link to this heading">#</a></h4>
+<span id="parameters-29"></span><h4>Parameters<a class="headerlink" href="#id147" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -3030,11 +3030,11 @@ positive.</p>
 </div>
 </section>
 <section id="id148">
-<h4>Returns<a class="headerlink" href="#id148" title="Link to this heading">#</a></h4>
+<span id="returns-29"></span><h4>Returns<a class="headerlink" href="#id148" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id149">
-<h4>Minimal Use<a class="headerlink" href="#id149" title="Link to this heading">#</a></h4>
+<span id="minimal-use-29"></span><h4>Minimal Use<a class="headerlink" href="#id149" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.box_cox_clean(...)</span>
@@ -3043,16 +3043,16 @@ positive.</p>
 </section>
 </section>
 <section id="box-cox-lambda">
-<h3>box_cox_lambda<a class="headerlink" href="#box-cox-lambda" title="Link to this heading">#</a></h3>
+<span id="box_cox_lambda"></span><h3>box_cox_lambda<a class="headerlink" href="#box-cox-lambda" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.box_cox_lambda</span></code></p>
 <section id="id150">
-<h4>Signature<a class="headerlink" href="#id150" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">box_cox_lambda</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;loglik&quot;</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="nb">float</span>
+<span id="signature-30"></span><h4>Signature<a class="headerlink" href="#id150" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">box_cox_lambda</span><span class="p">(</span><span class="n">series</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"loglik"</span><span class="p">,</span> <span class="n">period</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="nb">float</span>
 </pre></div>
 </div>
 </section>
 <section id="id151">
-<h4>Description<a class="headerlink" href="#id151" title="Link to this heading">#</a></h4>
+<span id="description-30"></span><h4>Description<a class="headerlink" href="#id151" title="Link to this heading">#</a></h4>
 <p>Select a Box-Cox transformation parameter <code class="docutils literal notranslate"><span class="pre">lambda</span></code> for one series.</p>
 <p><code class="docutils literal notranslate"><span class="pre">method='loglik'</span></code> uses the profile-likelihood (Box-Cox MLE, via scipy);
 <code class="docutils literal notranslate"><span class="pre">method='guerrero'</span></code> minimises the coefficient of variation of the
@@ -3061,7 +3061,7 @@ Requires strictly positive values (use a signed/Yeo-Johnson transform for
 series with non-positive values).</p>
 </section>
 <section id="id152">
-<h4>Parameters<a class="headerlink" href="#id152" title="Link to this heading">#</a></h4>
+<span id="parameters-30"></span><h4>Parameters<a class="headerlink" href="#id152" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -3096,11 +3096,11 @@ series with non-positive values).</p>
 </div>
 </section>
 <section id="id153">
-<h4>Returns<a class="headerlink" href="#id153" title="Link to this heading">#</a></h4>
+<span id="returns-30"></span><h4>Returns<a class="headerlink" href="#id153" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">float</span></code></p>
 </section>
 <section id="id154">
-<h4>Minimal Use<a class="headerlink" href="#id154" title="Link to this heading">#</a></h4>
+<span id="minimal-use-30"></span><h4>Minimal Use<a class="headerlink" href="#id154" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.box_cox_lambda(...)</span>
@@ -3109,20 +3109,20 @@ series with non-positive values).</p>
 </section>
 </section>
 <section id="inverse-box-cox">
-<h3>inverse_box_cox<a class="headerlink" href="#inverse-box-cox" title="Link to this heading">#</a></h3>
+<span id="inverse_box_cox"></span><h3>inverse_box_cox<a class="headerlink" href="#inverse-box-cox" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.inverse_box_cox</span></code></p>
 <section id="id155">
-<h4>Signature<a class="headerlink" href="#id155" title="Link to this heading">#</a></h4>
+<span id="signature-31"></span><h4>Signature<a class="headerlink" href="#id155" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">inverse_box_cox</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">lmbda</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
 </pre></div>
 </div>
 </section>
 <section id="id156">
-<h4>Description<a class="headerlink" href="#id156" title="Link to this heading">#</a></h4>
+<span id="description-31"></span><h4>Description<a class="headerlink" href="#id156" title="Link to this heading">#</a></h4>
 <p>Invert a Box-Cox transform with parameter <code class="docutils literal notranslate"><span class="pre">lmbda</span></code>.</p>
 </section>
 <section id="id157">
-<h4>Parameters<a class="headerlink" href="#id157" title="Link to this heading">#</a></h4>
+<span id="parameters-31"></span><h4>Parameters<a class="headerlink" href="#id157" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -3147,11 +3147,11 @@ series with non-positive values).</p>
 </div>
 </section>
 <section id="id158">
-<h4>Returns<a class="headerlink" href="#id158" title="Link to this heading">#</a></h4>
+<span id="returns-31"></span><h4>Returns<a class="headerlink" href="#id158" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code></p>
 </section>
 <section id="id159">
-<h4>Minimal Use<a class="headerlink" href="#id159" title="Link to this heading">#</a></h4>
+<span id="minimal-use-31"></span><h4>Minimal Use<a class="headerlink" href="#id159" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.inverse_box_cox(...)</span>
@@ -3160,20 +3160,20 @@ series with non-positive values).</p>
 </section>
 </section>
 <section id="standardize-clean">
-<h3>standardize_clean<a class="headerlink" href="#standardize-clean" title="Link to this heading">#</a></h3>
+<span id="standardize_clean"></span><h3>standardize_clean<a class="headerlink" href="#standardize-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.standardize_clean</span></code></p>
 <section id="id160">
-<h4>Signature<a class="headerlink" href="#id160" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">standardize_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;zscore&quot;</span><span class="p">,</span> <span class="n">ddof</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-32"></span><h4>Signature<a class="headerlink" href="#id160" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">standardize_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"zscore"</span><span class="p">,</span> <span class="n">ddof</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id161">
-<h4>Description<a class="headerlink" href="#id161" title="Link to this heading">#</a></h4>
+<span id="description-32"></span><h4>Description<a class="headerlink" href="#id161" title="Link to this heading">#</a></h4>
 <p>Standardize numeric columns with full-sample fitted parameters.</p>
 </section>
 <section id="id162">
-<h4>Parameters<a class="headerlink" href="#id162" title="Link to this heading">#</a></h4>
+<span id="parameters-32"></span><h4>Parameters<a class="headerlink" href="#id162" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -3203,11 +3203,11 @@ series with non-positive values).</p>
 </div>
 </section>
 <section id="id163">
-<h4>Returns<a class="headerlink" href="#id163" title="Link to this heading">#</a></h4>
+<span id="returns-32"></span><h4>Returns<a class="headerlink" href="#id163" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id164">
-<h4>Minimal Use<a class="headerlink" href="#id164" title="Link to this heading">#</a></h4>
+<span id="minimal-use-32"></span><h4>Minimal Use<a class="headerlink" href="#id164" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.standardize_clean(...)</span>
@@ -3216,20 +3216,20 @@ series with non-positive values).</p>
 </section>
 </section>
 <section id="apply-tcode-transform">
-<h3>apply_tcode_transform<a class="headerlink" href="#apply-tcode-transform" title="Link to this heading">#</a></h3>
+<span id="apply_tcode_transform"></span><h3>apply_tcode_transform<a class="headerlink" href="#apply-tcode-transform" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.apply_tcode_transform</span></code></p>
 <section id="id165">
-<h4>Signature<a class="headerlink" href="#id165" title="Link to this heading">#</a></h4>
+<span id="signature-33"></span><h4>Signature<a class="headerlink" href="#id165" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">apply_tcode_transform</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">tcode_map</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id166">
-<h4>Description<a class="headerlink" href="#id166" title="Link to this heading">#</a></h4>
+<span id="description-33"></span><h4>Description<a class="headerlink" href="#id166" title="Link to this heading">#</a></h4>
 <p>Apply McCracken-Ng transformation codes to matching columns.</p>
 </section>
 <section id="id167">
-<h4>Parameters<a class="headerlink" href="#id167" title="Link to this heading">#</a></h4>
+<span id="parameters-33"></span><h4>Parameters<a class="headerlink" href="#id167" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -3254,11 +3254,11 @@ series with non-positive values).</p>
 </div>
 </section>
 <section id="id168">
-<h4>Returns<a class="headerlink" href="#id168" title="Link to this heading">#</a></h4>
+<span id="returns-33"></span><h4>Returns<a class="headerlink" href="#id168" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id169">
-<h4>Minimal Use<a class="headerlink" href="#id169" title="Link to this heading">#</a></h4>
+<span id="minimal-use-33"></span><h4>Minimal Use<a class="headerlink" href="#id169" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.apply_tcode_transform(...)</span>
@@ -3267,20 +3267,20 @@ series with non-positive values).</p>
 </section>
 </section>
 <section id="freq-align-quarterly-to-monthly-clean">
-<h3>freq_align_quarterly_to_monthly_clean<a class="headerlink" href="#freq-align-quarterly-to-monthly-clean" title="Link to this heading">#</a></h3>
+<span id="freq_align_quarterly_to_monthly_clean"></span><h3>freq_align_quarterly_to_monthly_clean<a class="headerlink" href="#freq-align-quarterly-to-monthly-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.freq_align_quarterly_to_monthly_clean</span></code></p>
 <section id="id170">
-<h4>Signature<a class="headerlink" href="#id170" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">freq_align_quarterly_to_monthly_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">quarterly_columns</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">rule</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;step_forward&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-34"></span><h4>Signature<a class="headerlink" href="#id170" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">freq_align_quarterly_to_monthly_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">quarterly_columns</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">rule</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"step_forward"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id171">
-<h4>Description<a class="headerlink" href="#id171" title="Link to this heading">#</a></h4>
+<span id="description-34"></span><h4>Description<a class="headerlink" href="#id171" title="Link to this heading">#</a></h4>
 <p>Align selected quarterly columns on the panel’s monthly grid.</p>
 </section>
 <section id="id172">
-<h4>Parameters<a class="headerlink" href="#id172" title="Link to this heading">#</a></h4>
+<span id="parameters-34"></span><h4>Parameters<a class="headerlink" href="#id172" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -3310,11 +3310,11 @@ series with non-positive values).</p>
 </div>
 </section>
 <section id="id173">
-<h4>Returns<a class="headerlink" href="#id173" title="Link to this heading">#</a></h4>
+<span id="returns-34"></span><h4>Returns<a class="headerlink" href="#id173" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id174">
-<h4>Minimal Use<a class="headerlink" href="#id174" title="Link to this heading">#</a></h4>
+<span id="minimal-use-34"></span><h4>Minimal Use<a class="headerlink" href="#id174" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.freq_align_quarterly_to_monthly_clean(...)</span>
@@ -3323,20 +3323,20 @@ series with non-positive values).</p>
 </section>
 </section>
 <section id="freq-align-monthly-to-quarterly-clean">
-<h3>freq_align_monthly_to_quarterly_clean<a class="headerlink" href="#freq-align-monthly-to-quarterly-clean" title="Link to this heading">#</a></h3>
+<span id="freq_align_monthly_to_quarterly_clean"></span><h3>freq_align_monthly_to_quarterly_clean<a class="headerlink" href="#freq-align-monthly-to-quarterly-clean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.preprocessing.clean.freq_align_monthly_to_quarterly_clean</span></code></p>
 <section id="id175">
-<h4>Signature<a class="headerlink" href="#id175" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">freq_align_monthly_to_quarterly_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">monthly_columns</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">rule</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;quarterly_average&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-35"></span><h4>Signature<a class="headerlink" href="#id175" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">preprocessing</span><span class="o">.</span><span class="n">freq_align_monthly_to_quarterly_clean</span><span class="p">(</span><span class="n">panel</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">monthly_columns</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">rule</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"quarterly_average"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id176">
-<h4>Description<a class="headerlink" href="#id176" title="Link to this heading">#</a></h4>
+<span id="description-35"></span><h4>Description<a class="headerlink" href="#id176" title="Link to this heading">#</a></h4>
 <p>Aggregate selected monthly columns to a quarterly grid.</p>
 </section>
 <section id="id177">
-<h4>Parameters<a class="headerlink" href="#id177" title="Link to this heading">#</a></h4>
+<span id="parameters-35"></span><h4>Parameters<a class="headerlink" href="#id177" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -3366,11 +3366,11 @@ series with non-positive values).</p>
 </div>
 </section>
 <section id="id178">
-<h4>Returns<a class="headerlink" href="#id178" title="Link to this heading">#</a></h4>
+<span id="returns-35"></span><h4>Returns<a class="headerlink" href="#id178" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id179">
-<h4>Minimal Use<a class="headerlink" href="#id179" title="Link to this heading">#</a></h4>
+<span id="minimal-use-35"></span><h4>Minimal Use<a class="headerlink" href="#id179" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.preprocessing.freq_align_monthly_to_quarterly_clean(...)</span>
@@ -3416,7 +3416,7 @@ series with non-positive values).</p>
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
@@ -3773,8 +3773,8 @@ series with non-positive values).</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -3801,7 +3801,6 @@ series with non-positive values).</p>
 
   <p class="sphinx-version">
     Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
-    <br/>
   </p>
 </div>
       

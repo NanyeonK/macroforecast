@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 
@@ -27,26 +26,26 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=6a604523" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
     <script src="../_static/documentation_options.js?v=c9f84ce7"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../_static/design-tabs.js?v=fcb327ea"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference/forecast_analysis';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -54,6 +53,7 @@
     <link rel="next" title="macroforecast.metrics" href="metrics.html" />
     <link rel="prev" title="macroforecast.forecasting" href="forecasting.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5" />
   
@@ -103,7 +103,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -234,7 +234,7 @@
         <div class="navbar-item navbar-persistent--container">
           
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -245,15 +245,15 @@
         <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -290,7 +290,7 @@
   
     <div class="navbar-persistent--mobile">
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -299,7 +299,7 @@
   
 
   
-    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -313,7 +313,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
@@ -418,15 +418,15 @@
           <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -461,7 +461,7 @@
   </div>
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
   <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
     <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
   </svg>
@@ -504,7 +504,7 @@
 <li class="toctree-l1"><a class="reference internal" href="model_ensemble.html">macroforecast.model_ensemble</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_selection.html">macroforecast.model_selection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.forecast_analysis</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">macroforecast.forecast_analysis</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation And Testing</span></p>
 <ul class="nav bd-sidenav">
@@ -571,7 +571,7 @@
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="../index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
+        <i class="fa-solid fa-house"></i>
       </a>
     </li>
     
@@ -595,7 +595,7 @@
                 <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-forecast-analysis">
-<h1>macroforecast.forecast_analysis<a class="headerlink" href="#macroforecast-forecast-analysis" title="Link to this heading">#</a></h1>
+<span id="macroforecastforecast_analysis"></span><h1>macroforecast.forecast_analysis<a class="headerlink" href="#macroforecast-forecast-analysis" title="Link to this heading">#</a></h1>
 <p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
 <p>Forecast diagnostics for fitted values, residuals, tuning traces, and forecast paths.</p>
 <section id="public-symbols">
@@ -999,20 +999,20 @@
 </section>
 </section>
 <section id="coefficient-trace">
-<h3>coefficient_trace<a class="headerlink" href="#coefficient-trace" title="Link to this heading">#</a></h3>
+<span id="coefficient_trace"></span><h3>coefficient_trace<a class="headerlink" href="#coefficient-trace" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.coefficient_trace</span></code></p>
 <section id="id1">
-<h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<span id="signature-1"></span><h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">coefficient_trace</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_intercept</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">load_pickle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
-<h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<span id="description-1"></span><h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
 <p>Read saved fit sidecars and return coefficient paths over origins.</p>
 </section>
 <section id="id3">
-<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
+<span id="parameters-1"></span><h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1047,11 +1047,11 @@
 </div>
 </section>
 <section id="id4">
-<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
+<span id="returns-1"></span><h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id5">
-<h4>Minimal Use<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
+<span id="minimal-use-1"></span><h4>Minimal Use<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.coefficient_trace(...)</span>
@@ -1060,20 +1060,20 @@
 </section>
 </section>
 <section id="custom-forecast-diagnostic">
-<h3>custom_forecast_diagnostic<a class="headerlink" href="#custom-forecast-diagnostic" title="Link to this heading">#</a></h3>
+<span id="custom_forecast_diagnostic"></span><h3>custom_forecast_diagnostic<a class="headerlink" href="#custom-forecast-diagnostic" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.custom_forecast_diagnostic</span></code></p>
 <section id="id6">
-<h4>Signature<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
+<span id="signature-2"></span><h4>Signature<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">custom_forecast_diagnostic</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id7">
-<h4>Description<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
+<span id="description-2"></span><h4>Description<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
 <p>Run a user-supplied forecast diagnostic and attach macroforecast metadata.</p>
 </section>
 <section id="id8">
-<h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
+<span id="parameters-2"></span><h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1113,11 +1113,11 @@
 </div>
 </section>
 <section id="id9">
-<h4>Returns<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
+<span id="returns-2"></span><h4>Returns<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id10">
-<h4>Minimal Use<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
+<span id="minimal-use-2"></span><h4>Minimal Use<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.custom_forecast_diagnostic(...)</span>
@@ -1126,20 +1126,20 @@
 </section>
 </section>
 <section id="diagnose-forecasts">
-<h3>diagnose_forecasts<a class="headerlink" href="#diagnose-forecasts" title="Link to this heading">#</a></h3>
+<span id="diagnose_forecasts"></span><h3>diagnose_forecasts<a class="headerlink" href="#diagnose-forecasts" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.diagnose_forecasts</span></code></p>
 <section id="id11">
-<h4>Signature<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">diagnose_forecasts</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_fitted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_residuals</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_residual_acf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_residual_qq</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_rolling_loss</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">rolling_window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">rolling_metric</span><span class="p">:</span> <span class="n">LossMetric</span> <span class="o">=</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="n">include_forecast_scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">levels</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">scale_view</span><span class="p">:</span> <span class="n">ScaleView</span> <span class="o">=</span> <span class="s2">&quot;both_overlay&quot;</span><span class="p">,</span> <span class="n">back_transform</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include_training_loss</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_rolling_training_loss</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">training_loss_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="n">include_first_vs_last</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_dfm_idiosyncratic_acf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_dfm_factor_stability</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_coefficients</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_parameter_stability</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_tuning</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_tuning_objective</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_hyperparameters</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_tuning_scores</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_ensemble_weights</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_ensemble_concentration</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_member_contribution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_stage_updates</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ForecastDiagnosticReport</span>
+<span id="signature-3"></span><h4>Signature<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">diagnose_forecasts</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_fitted</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_residuals</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_residual_acf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_residual_qq</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_rolling_loss</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">rolling_window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">rolling_metric</span><span class="p">:</span> <span class="n">LossMetric</span> <span class="o">=</span> <span class="s2">"rmse"</span><span class="p">,</span> <span class="n">include_forecast_scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">levels</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">scale_view</span><span class="p">:</span> <span class="n">ScaleView</span> <span class="o">=</span> <span class="s2">"both_overlay"</span><span class="p">,</span> <span class="n">back_transform</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include_training_loss</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_rolling_training_loss</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">training_loss_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"rmse"</span><span class="p">,</span> <span class="n">include_first_vs_last</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_dfm_idiosyncratic_acf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_dfm_factor_stability</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_coefficients</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_parameter_stability</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_tuning</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_tuning_objective</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_hyperparameters</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_tuning_scores</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_ensemble_weights</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_ensemble_concentration</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_member_contribution</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">include_stage_updates</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ForecastDiagnosticReport</span>
 </pre></div>
 </div>
 </section>
 <section id="id12">
-<h4>Description<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
+<span id="description-3"></span><h4>Description<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
 <p>Run the standard forecast diagnostics on a ForecastResult or table.</p>
 </section>
 <section id="id13">
-<h4>Parameters<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
+<span id="parameters-3"></span><h4>Parameters<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1299,11 +1299,11 @@
 </div>
 </section>
 <section id="id14">
-<h4>Returns<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
+<span id="returns-3"></span><h4>Returns<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ForecastDiagnosticReport</span></code></p>
 </section>
 <section id="id15">
-<h4>Minimal Use<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
+<span id="minimal-use-3"></span><h4>Minimal Use<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.diagnose_forecasts(...)</span>
@@ -1312,20 +1312,20 @@
 </section>
 </section>
 <section id="dfm-factor-stability">
-<h3>dfm_factor_stability<a class="headerlink" href="#dfm-factor-stability" title="Link to this heading">#</a></h3>
+<span id="dfm_factor_stability"></span><h3>dfm_factor_stability<a class="headerlink" href="#dfm-factor-stability" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.dfm_factor_stability</span></code></p>
 <section id="id16">
-<h4>Signature<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
+<span id="signature-4"></span><h4>Signature<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">dfm_factor_stability</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">load_pickle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id17">
-<h4>Description<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
+<span id="description-4"></span><h4>Description<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
 <p>Summarize filtered DFM factors saved in fit diagnostics.</p>
 </section>
 <section id="id18">
-<h4>Parameters<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
+<span id="parameters-4"></span><h4>Parameters<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1350,11 +1350,11 @@
 </div>
 </section>
 <section id="id19">
-<h4>Returns<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
+<span id="returns-4"></span><h4>Returns<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id20">
-<h4>Minimal Use<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
+<span id="minimal-use-4"></span><h4>Minimal Use<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.dfm_factor_stability(...)</span>
@@ -1363,20 +1363,20 @@
 </section>
 </section>
 <section id="dfm-idiosyncratic-acf">
-<h3>dfm_idiosyncratic_acf<a class="headerlink" href="#dfm-idiosyncratic-acf" title="Link to this heading">#</a></h3>
+<span id="dfm_idiosyncratic_acf"></span><h3>dfm_idiosyncratic_acf<a class="headerlink" href="#dfm-idiosyncratic-acf" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.dfm_idiosyncratic_acf</span></code></p>
 <section id="id21">
-<h4>Signature<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
+<span id="signature-5"></span><h4>Signature<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">dfm_idiosyncratic_acf</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">load_pickle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id22">
-<h4>Description<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
+<span id="description-5"></span><h4>Description<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
 <p>Return ACF diagnostics for DFM idiosyncratic residual series.</p>
 </section>
 <section id="id23">
-<h4>Parameters<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
+<span id="parameters-5"></span><h4>Parameters<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1406,11 +1406,11 @@
 </div>
 </section>
 <section id="id24">
-<h4>Returns<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
+<span id="returns-5"></span><h4>Returns<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id25">
-<h4>Minimal Use<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
+<span id="minimal-use-5"></span><h4>Minimal Use<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.dfm_idiosyncratic_acf(...)</span>
@@ -1419,20 +1419,20 @@
 </section>
 </section>
 <section id="ensemble-member-contribution">
-<h3>ensemble_member_contribution<a class="headerlink" href="#ensemble-member-contribution" title="Link to this heading">#</a></h3>
+<span id="ensemble_member_contribution"></span><h3>ensemble_member_contribution<a class="headerlink" href="#ensemble-member-contribution" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.ensemble_member_contribution</span></code></p>
 <section id="id26">
-<h4>Signature<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
+<span id="signature-6"></span><h4>Signature<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">ensemble_member_contribution</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id27">
-<h4>Description<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
+<span id="description-6"></span><h4>Description<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
 <p>Return member-level weighted forecast contributions for combinations.</p>
 </section>
 <section id="id28">
-<h4>Parameters<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
+<span id="parameters-6"></span><h4>Parameters<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1452,11 +1452,11 @@
 </div>
 </section>
 <section id="id29">
-<h4>Returns<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
+<span id="returns-6"></span><h4>Returns<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id30">
-<h4>Minimal Use<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
+<span id="minimal-use-6"></span><h4>Minimal Use<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.ensemble_member_contribution(...)</span>
@@ -1465,20 +1465,20 @@
 </section>
 </section>
 <section id="ensemble-weight-concentration">
-<h3>ensemble_weight_concentration<a class="headerlink" href="#ensemble-weight-concentration" title="Link to this heading">#</a></h3>
+<span id="ensemble_weight_concentration"></span><h3>ensemble_weight_concentration<a class="headerlink" href="#ensemble-weight-concentration" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.ensemble_weight_concentration</span></code></p>
 <section id="id31">
-<h4>Signature<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
+<span id="signature-7"></span><h4>Signature<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">ensemble_weight_concentration</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id32">
-<h4>Description<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
+<span id="description-7"></span><h4>Description<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
 <p>Return concentration metrics for identifiable forecast-combination weights.</p>
 </section>
 <section id="id33">
-<h4>Parameters<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
+<span id="parameters-7"></span><h4>Parameters<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1498,11 +1498,11 @@
 </div>
 </section>
 <section id="id34">
-<h4>Returns<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
+<span id="returns-7"></span><h4>Returns<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id35">
-<h4>Minimal Use<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
+<span id="minimal-use-7"></span><h4>Minimal Use<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.ensemble_weight_concentration(...)</span>
@@ -1511,20 +1511,20 @@
 </section>
 </section>
 <section id="ensemble-weights-over-time">
-<h3>ensemble_weights_over_time<a class="headerlink" href="#ensemble-weights-over-time" title="Link to this heading">#</a></h3>
+<span id="ensemble_weights_over_time"></span><h3>ensemble_weights_over_time<a class="headerlink" href="#ensemble-weights-over-time" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.ensemble_weights_over_time</span></code></p>
 <section id="id36">
-<h4>Signature<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">ensemble_weights_over_time</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">unsupported</span><span class="p">:</span> <span class="n">UnsupportedWeights</span> <span class="o">=</span> <span class="s2">&quot;skip&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-8"></span><h4>Signature<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">ensemble_weights_over_time</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">unsupported</span><span class="p">:</span> <span class="n">UnsupportedWeights</span> <span class="o">=</span> <span class="s2">"skip"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id37">
-<h4>Description<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
+<span id="description-8"></span><h4>Description<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
 <p>Reconstruct combination weights when the method has identifiable weights.</p>
 </section>
 <section id="id38">
-<h4>Parameters<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
+<span id="parameters-8"></span><h4>Parameters<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1549,11 +1549,11 @@
 </div>
 </section>
 <section id="id39">
-<h4>Returns<a class="headerlink" href="#id39" title="Link to this heading">#</a></h4>
+<span id="returns-8"></span><h4>Returns<a class="headerlink" href="#id39" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id40">
-<h4>Minimal Use<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
+<span id="minimal-use-8"></span><h4>Minimal Use<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.ensemble_weights_over_time(...)</span>
@@ -1562,20 +1562,20 @@
 </section>
 </section>
 <section id="first-vs-last-forecast">
-<h3>first_vs_last_forecast<a class="headerlink" href="#first-vs-last-forecast" title="Link to this heading">#</a></h3>
+<span id="first_vs_last_forecast"></span><h3>first_vs_last_forecast<a class="headerlink" href="#first-vs-last-forecast" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.first_vs_last_forecast</span></code></p>
 <section id="id41">
-<h4>Signature<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">first_vs_last_forecast</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">),</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-9"></span><h4>Signature<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">first_vs_last_forecast</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'model'</span><span class="p">,</span> <span class="s1">'horizon'</span><span class="p">),</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id42">
-<h4>Description<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
+<span id="description-9"></span><h4>Description<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
 <p>Compare the first and last forecast row inside each group.</p>
 </section>
 <section id="id43">
-<h4>Parameters<a class="headerlink" href="#id43" title="Link to this heading">#</a></h4>
+<span id="parameters-9"></span><h4>Parameters<a class="headerlink" href="#id43" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1605,11 +1605,11 @@
 </div>
 </section>
 <section id="id44">
-<h4>Returns<a class="headerlink" href="#id44" title="Link to this heading">#</a></h4>
+<span id="returns-9"></span><h4>Returns<a class="headerlink" href="#id44" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id45">
-<h4>Minimal Use<a class="headerlink" href="#id45" title="Link to this heading">#</a></h4>
+<span id="minimal-use-9"></span><h4>Minimal Use<a class="headerlink" href="#id45" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.first_vs_last_forecast(...)</span>
@@ -1618,20 +1618,20 @@
 </section>
 </section>
 <section id="fitted-vs-actual">
-<h3>fitted_vs_actual<a class="headerlink" href="#fitted-vs-actual" title="Link to this heading">#</a></h3>
+<span id="fitted_vs_actual"></span><h3>fitted_vs_actual<a class="headerlink" href="#fitted-vs-actual" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.fitted_vs_actual</span></code></p>
 <section id="id46">
-<h4>Signature<a class="headerlink" href="#id46" title="Link to this heading">#</a></h4>
+<span id="signature-10"></span><h4>Signature<a class="headerlink" href="#id46" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">fitted_vs_actual</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">drop_missing_actual</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id47">
-<h4>Description<a class="headerlink" href="#id47" title="Link to this heading">#</a></h4>
+<span id="description-10"></span><h4>Description<a class="headerlink" href="#id47" title="Link to this heading">#</a></h4>
 <p>Return forecast rows with residual and error columns.</p>
 </section>
 <section id="id48">
-<h4>Parameters<a class="headerlink" href="#id48" title="Link to this heading">#</a></h4>
+<span id="parameters-10"></span><h4>Parameters<a class="headerlink" href="#id48" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1661,11 +1661,11 @@
 </div>
 </section>
 <section id="id49">
-<h4>Returns<a class="headerlink" href="#id49" title="Link to this heading">#</a></h4>
+<span id="returns-10"></span><h4>Returns<a class="headerlink" href="#id49" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id50">
-<h4>Minimal Use<a class="headerlink" href="#id50" title="Link to this heading">#</a></h4>
+<span id="minimal-use-10"></span><h4>Minimal Use<a class="headerlink" href="#id50" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.fitted_vs_actual(...)</span>
@@ -1674,20 +1674,20 @@
 </section>
 </section>
 <section id="forecast-overview">
-<h3>forecast_overview<a class="headerlink" href="#forecast-overview" title="Link to this heading">#</a></h3>
+<span id="forecast_overview"></span><h3>forecast_overview<a class="headerlink" href="#forecast-overview" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.forecast_overview</span></code></p>
 <section id="id51">
-<h4>Signature<a class="headerlink" href="#id51" title="Link to this heading">#</a></h4>
+<span id="signature-11"></span><h4>Signature<a class="headerlink" href="#id51" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">forecast_overview</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
 </pre></div>
 </div>
 </section>
 <section id="id52">
-<h4>Description<a class="headerlink" href="#id52" title="Link to this heading">#</a></h4>
+<span id="description-11"></span><h4>Description<a class="headerlink" href="#id52" title="Link to this heading">#</a></h4>
 <p>Return compact shape, model, horizon, and metadata coverage counts.</p>
 </section>
 <section id="id53">
-<h4>Parameters<a class="headerlink" href="#id53" title="Link to this heading">#</a></h4>
+<span id="parameters-11"></span><h4>Parameters<a class="headerlink" href="#id53" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1707,11 +1707,11 @@
 </div>
 </section>
 <section id="id54">
-<h4>Returns<a class="headerlink" href="#id54" title="Link to this heading">#</a></h4>
+<span id="returns-11"></span><h4>Returns<a class="headerlink" href="#id54" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict[str,</span> <span class="pre">Any]</span></code></p>
 </section>
 <section id="id55">
-<h4>Minimal Use<a class="headerlink" href="#id55" title="Link to this heading">#</a></h4>
+<span id="minimal-use-11"></span><h4>Minimal Use<a class="headerlink" href="#id55" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.forecast_overview(...)</span>
@@ -1720,20 +1720,20 @@
 </section>
 </section>
 <section id="forecast-scale-view">
-<h3>forecast_scale_view<a class="headerlink" href="#forecast-scale-view" title="Link to this heading">#</a></h3>
+<span id="forecast_scale_view"></span><h3>forecast_scale_view<a class="headerlink" href="#forecast-scale-view" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.forecast_scale_view</span></code></p>
 <section id="id56">
-<h4>Signature<a class="headerlink" href="#id56" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">forecast_scale_view</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">levels</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">view</span><span class="p">:</span> <span class="n">ScaleView</span> <span class="o">=</span> <span class="s2">&quot;both_overlay&quot;</span><span class="p">,</span> <span class="n">back_transform</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-12"></span><h4>Signature<a class="headerlink" href="#id56" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">forecast_scale_view</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">levels</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">view</span><span class="p">:</span> <span class="n">ScaleView</span> <span class="o">=</span> <span class="s2">"both_overlay"</span><span class="p">,</span> <span class="n">back_transform</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id57">
-<h4>Description<a class="headerlink" href="#id57" title="Link to this heading">#</a></h4>
+<span id="description-12"></span><h4>Description<a class="headerlink" href="#id57" title="Link to this heading">#</a></h4>
 <p>Return transformed and back-transformed forecast rows when possible.</p>
 </section>
 <section id="id58">
-<h4>Parameters<a class="headerlink" href="#id58" title="Link to this heading">#</a></h4>
+<span id="parameters-12"></span><h4>Parameters<a class="headerlink" href="#id58" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1783,11 +1783,11 @@
 </div>
 </section>
 <section id="id59">
-<h4>Returns<a class="headerlink" href="#id59" title="Link to this heading">#</a></h4>
+<span id="returns-12"></span><h4>Returns<a class="headerlink" href="#id59" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id60">
-<h4>Minimal Use<a class="headerlink" href="#id60" title="Link to this heading">#</a></h4>
+<span id="minimal-use-12"></span><h4>Minimal Use<a class="headerlink" href="#id60" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.forecast_scale_view(...)</span>
@@ -1796,20 +1796,20 @@
 </section>
 </section>
 <section id="hyperparameter-path">
-<h3>hyperparameter_path<a class="headerlink" href="#hyperparameter-path" title="Link to this heading">#</a></h3>
+<span id="hyperparameter_path"></span><h3>hyperparameter_path<a class="headerlink" href="#hyperparameter-path" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.hyperparameter_path</span></code></p>
 <section id="id61">
-<h4>Signature<a class="headerlink" href="#id61" title="Link to this heading">#</a></h4>
+<span id="signature-13"></span><h4>Signature<a class="headerlink" href="#id61" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">hyperparameter_path</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id62">
-<h4>Description<a class="headerlink" href="#id62" title="Link to this heading">#</a></h4>
+<span id="description-13"></span><h4>Description<a class="headerlink" href="#id62" title="Link to this heading">#</a></h4>
 <p>Return long-form selected hyperparameters by origin.</p>
 </section>
 <section id="id63">
-<h4>Parameters<a class="headerlink" href="#id63" title="Link to this heading">#</a></h4>
+<span id="parameters-13"></span><h4>Parameters<a class="headerlink" href="#id63" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1829,11 +1829,11 @@
 </div>
 </section>
 <section id="id64">
-<h4>Returns<a class="headerlink" href="#id64" title="Link to this heading">#</a></h4>
+<span id="returns-13"></span><h4>Returns<a class="headerlink" href="#id64" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id65">
-<h4>Minimal Use<a class="headerlink" href="#id65" title="Link to this heading">#</a></h4>
+<span id="minimal-use-13"></span><h4>Minimal Use<a class="headerlink" href="#id65" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.hyperparameter_path(...)</span>
@@ -1842,20 +1842,20 @@
 </section>
 </section>
 <section id="parameter-stability">
-<h3>parameter_stability<a class="headerlink" href="#parameter-stability" title="Link to this heading">#</a></h3>
+<span id="parameter_stability"></span><h3>parameter_stability<a class="headerlink" href="#parameter-stability" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.parameter_stability</span></code></p>
 <section id="id66">
-<h4>Signature<a class="headerlink" href="#id66" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">parameter_stability</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_intercept</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">load_pickle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">,</span> <span class="s1">&#39;feature&#39;</span><span class="p">),</span> <span class="n">models</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-14"></span><h4>Signature<a class="headerlink" href="#id66" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">parameter_stability</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">include_intercept</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">load_pickle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'model'</span><span class="p">,</span> <span class="s1">'horizon'</span><span class="p">,</span> <span class="s1">'feature'</span><span class="p">),</span> <span class="n">models</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id67">
-<h4>Description<a class="headerlink" href="#id67" title="Link to this heading">#</a></h4>
+<span id="description-14"></span><h4>Description<a class="headerlink" href="#id67" title="Link to this heading">#</a></h4>
 <p>Summarize coefficient drift and sign changes over forecast origins.</p>
 </section>
 <section id="id68">
-<h4>Parameters<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
+<span id="parameters-14"></span><h4>Parameters<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1895,11 +1895,11 @@
 </div>
 </section>
 <section id="id69">
-<h4>Returns<a class="headerlink" href="#id69" title="Link to this heading">#</a></h4>
+<span id="returns-14"></span><h4>Returns<a class="headerlink" href="#id69" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id70">
-<h4>Minimal Use<a class="headerlink" href="#id70" title="Link to this heading">#</a></h4>
+<span id="minimal-use-14"></span><h4>Minimal Use<a class="headerlink" href="#id70" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.parameter_stability(...)</span>
@@ -1908,20 +1908,20 @@
 </section>
 </section>
 <section id="residual-autocorrelation">
-<h3>residual_autocorrelation<a class="headerlink" href="#residual-autocorrelation" title="Link to this heading">#</a></h3>
+<span id="residual_autocorrelation"></span><h3>residual_autocorrelation<a class="headerlink" href="#residual-autocorrelation" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.residual_autocorrelation</span></code></p>
 <section id="id71">
-<h4>Signature<a class="headerlink" href="#id71" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">residual_autocorrelation</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">),</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-15"></span><h4>Signature<a class="headerlink" href="#id71" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">residual_autocorrelation</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_lag</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'model'</span><span class="p">,</span> <span class="s1">'horizon'</span><span class="p">),</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id72">
-<h4>Description<a class="headerlink" href="#id72" title="Link to this heading">#</a></h4>
+<span id="description-15"></span><h4>Description<a class="headerlink" href="#id72" title="Link to this heading">#</a></h4>
 <p>Return residual autocorrelation by model/horizon group.</p>
 </section>
 <section id="id73">
-<h4>Parameters<a class="headerlink" href="#id73" title="Link to this heading">#</a></h4>
+<span id="parameters-15"></span><h4>Parameters<a class="headerlink" href="#id73" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1956,11 +1956,11 @@
 </div>
 </section>
 <section id="id74">
-<h4>Returns<a class="headerlink" href="#id74" title="Link to this heading">#</a></h4>
+<span id="returns-15"></span><h4>Returns<a class="headerlink" href="#id74" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id75">
-<h4>Minimal Use<a class="headerlink" href="#id75" title="Link to this heading">#</a></h4>
+<span id="minimal-use-15"></span><h4>Minimal Use<a class="headerlink" href="#id75" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.residual_autocorrelation(...)</span>
@@ -1969,20 +1969,20 @@
 </section>
 </section>
 <section id="residual-qq">
-<h3>residual_qq<a class="headerlink" href="#residual-qq" title="Link to this heading">#</a></h3>
+<span id="residual_qq"></span><h3>residual_qq<a class="headerlink" href="#residual-qq" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.residual_qq</span></code></p>
 <section id="id76">
-<h4>Signature<a class="headerlink" href="#id76" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">residual_qq</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_quantiles</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">21</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">),</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-16"></span><h4>Signature<a class="headerlink" href="#id76" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">residual_qq</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_quantiles</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">21</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'model'</span><span class="p">,</span> <span class="s1">'horizon'</span><span class="p">),</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id77">
-<h4>Description<a class="headerlink" href="#id77" title="Link to this heading">#</a></h4>
+<span id="description-16"></span><h4>Description<a class="headerlink" href="#id77" title="Link to this heading">#</a></h4>
 <p>Return residual QQ table against a fitted normal reference.</p>
 </section>
 <section id="id78">
-<h4>Parameters<a class="headerlink" href="#id78" title="Link to this heading">#</a></h4>
+<span id="parameters-16"></span><h4>Parameters<a class="headerlink" href="#id78" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2017,11 +2017,11 @@
 </div>
 </section>
 <section id="id79">
-<h4>Returns<a class="headerlink" href="#id79" title="Link to this heading">#</a></h4>
+<span id="returns-16"></span><h4>Returns<a class="headerlink" href="#id79" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id80">
-<h4>Minimal Use<a class="headerlink" href="#id80" title="Link to this heading">#</a></h4>
+<span id="minimal-use-16"></span><h4>Minimal Use<a class="headerlink" href="#id80" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.residual_qq(...)</span>
@@ -2030,20 +2030,20 @@
 </section>
 </section>
 <section id="residual-report">
-<h3>residual_report<a class="headerlink" href="#residual-report" title="Link to this heading">#</a></h3>
+<span id="residual_report"></span><h3>residual_report<a class="headerlink" href="#residual-report" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.residual_report</span></code></p>
 <section id="id81">
-<h4>Signature<a class="headerlink" href="#id81" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">residual_report</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">),</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-17"></span><h4>Signature<a class="headerlink" href="#id81" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">residual_report</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'model'</span><span class="p">,</span> <span class="s1">'horizon'</span><span class="p">),</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id82">
-<h4>Description<a class="headerlink" href="#id82" title="Link to this heading">#</a></h4>
+<span id="description-17"></span><h4>Description<a class="headerlink" href="#id82" title="Link to this heading">#</a></h4>
 <p>Return grouped out-of-sample residual diagnostics.</p>
 </section>
 <section id="id83">
-<h4>Parameters<a class="headerlink" href="#id83" title="Link to this heading">#</a></h4>
+<span id="parameters-17"></span><h4>Parameters<a class="headerlink" href="#id83" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2073,11 +2073,11 @@
 </div>
 </section>
 <section id="id84">
-<h4>Returns<a class="headerlink" href="#id84" title="Link to this heading">#</a></h4>
+<span id="returns-17"></span><h4>Returns<a class="headerlink" href="#id84" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id85">
-<h4>Minimal Use<a class="headerlink" href="#id85" title="Link to this heading">#</a></h4>
+<span id="minimal-use-17"></span><h4>Minimal Use<a class="headerlink" href="#id85" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.residual_report(...)</span>
@@ -2086,20 +2086,20 @@
 </section>
 </section>
 <section id="rolling-loss">
-<h3>rolling_loss<a class="headerlink" href="#rolling-loss" title="Link to this heading">#</a></h3>
+<span id="rolling_loss"></span><h3>rolling_loss<a class="headerlink" href="#rolling-loss" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.rolling_loss</span></code></p>
 <section id="id86">
-<h4>Signature<a class="headerlink" href="#id86" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">rolling_loss</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">LossMetric</span> <span class="o">=</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">),</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-18"></span><h4>Signature<a class="headerlink" href="#id86" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">rolling_loss</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">LossMetric</span> <span class="o">=</span> <span class="s2">"rmse"</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'model'</span><span class="p">,</span> <span class="s1">'horizon'</span><span class="p">),</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id87">
-<h4>Description<a class="headerlink" href="#id87" title="Link to this heading">#</a></h4>
+<span id="description-18"></span><h4>Description<a class="headerlink" href="#id87" title="Link to this heading">#</a></h4>
 <p>Return rolling out-of-sample loss by model and horizon.</p>
 </section>
 <section id="id88">
-<h4>Parameters<a class="headerlink" href="#id88" title="Link to this heading">#</a></h4>
+<span id="parameters-18"></span><h4>Parameters<a class="headerlink" href="#id88" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2144,11 +2144,11 @@
 </div>
 </section>
 <section id="id89">
-<h4>Returns<a class="headerlink" href="#id89" title="Link to this heading">#</a></h4>
+<span id="returns-18"></span><h4>Returns<a class="headerlink" href="#id89" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id90">
-<h4>Minimal Use<a class="headerlink" href="#id90" title="Link to this heading">#</a></h4>
+<span id="minimal-use-18"></span><h4>Minimal Use<a class="headerlink" href="#id90" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.rolling_loss(...)</span>
@@ -2157,20 +2157,20 @@
 </section>
 </section>
 <section id="rolling-training-loss">
-<h3>rolling_training_loss<a class="headerlink" href="#rolling-training-loss" title="Link to this heading">#</a></h3>
+<span id="rolling_training_loss"></span><h3>rolling_training_loss<a class="headerlink" href="#rolling-training-loss" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.rolling_training_loss</span></code></p>
 <section id="id91">
-<h4>Signature<a class="headerlink" href="#id91" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">rolling_training_loss</span><span class="p">(</span><span class="n">forecasts_or_trace</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;rmse&quot;</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">),</span> <span class="n">load_pickle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-19"></span><h4>Signature<a class="headerlink" href="#id91" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">rolling_training_loss</span><span class="p">(</span><span class="n">forecasts_or_trace</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"rmse"</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'model'</span><span class="p">,</span> <span class="s1">'horizon'</span><span class="p">),</span> <span class="n">load_pickle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id92">
-<h4>Description<a class="headerlink" href="#id92" title="Link to this heading">#</a></h4>
+<span id="description-19"></span><h4>Description<a class="headerlink" href="#id92" title="Link to this heading">#</a></h4>
 <p>Return a rolling trace of saved in-sample training metrics.</p>
 </section>
 <section id="id93">
-<h4>Parameters<a class="headerlink" href="#id93" title="Link to this heading">#</a></h4>
+<span id="parameters-19"></span><h4>Parameters<a class="headerlink" href="#id93" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2215,11 +2215,11 @@
 </div>
 </section>
 <section id="id94">
-<h4>Returns<a class="headerlink" href="#id94" title="Link to this heading">#</a></h4>
+<span id="returns-19"></span><h4>Returns<a class="headerlink" href="#id94" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id95">
-<h4>Minimal Use<a class="headerlink" href="#id95" title="Link to this heading">#</a></h4>
+<span id="minimal-use-19"></span><h4>Minimal Use<a class="headerlink" href="#id95" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.rolling_training_loss(...)</span>
@@ -2228,20 +2228,20 @@
 </section>
 </section>
 <section id="select-forecast-origins">
-<h3>select_forecast_origins<a class="headerlink" href="#select-forecast-origins" title="Link to this heading">#</a></h3>
+<span id="select_forecast_origins"></span><h3>select_forecast_origins<a class="headerlink" href="#select-forecast-origins" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.select_forecast_origins</span></code></p>
 <section id="id96">
-<h4>Signature<a class="headerlink" href="#id96" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">select_forecast_origins</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">view</span><span class="p">:</span> <span class="n">OriginView</span> <span class="o">=</span> <span class="s2">&quot;all_origins&quot;</span><span class="p">,</span> <span class="n">every_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">include_last</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-20"></span><h4>Signature<a class="headerlink" href="#id96" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">select_forecast_origins</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">view</span><span class="p">:</span> <span class="n">OriginView</span> <span class="o">=</span> <span class="s2">"all_origins"</span><span class="p">,</span> <span class="n">every_n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">include_last</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">include_combined</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id97">
-<h4>Description<a class="headerlink" href="#id97" title="Link to this heading">#</a></h4>
+<span id="description-20"></span><h4>Description<a class="headerlink" href="#id97" title="Link to this heading">#</a></h4>
 <p>Return a forecast table filtered to a requested origin view.</p>
 </section>
 <section id="id98">
-<h4>Parameters<a class="headerlink" href="#id98" title="Link to this heading">#</a></h4>
+<span id="parameters-20"></span><h4>Parameters<a class="headerlink" href="#id98" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2281,11 +2281,11 @@
 </div>
 </section>
 <section id="id99">
-<h4>Returns<a class="headerlink" href="#id99" title="Link to this heading">#</a></h4>
+<span id="returns-20"></span><h4>Returns<a class="headerlink" href="#id99" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id100">
-<h4>Minimal Use<a class="headerlink" href="#id100" title="Link to this heading">#</a></h4>
+<span id="minimal-use-20"></span><h4>Minimal Use<a class="headerlink" href="#id100" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.select_forecast_origins(...)</span>
@@ -2294,20 +2294,20 @@
 </section>
 </section>
 <section id="stage-update-trace">
-<h3>stage_update_trace<a class="headerlink" href="#stage-update-trace" title="Link to this heading">#</a></h3>
+<span id="stage_update_trace"></span><h3>stage_update_trace<a class="headerlink" href="#stage-update-trace" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.stage_update_trace</span></code></p>
 <section id="id101">
-<h4>Signature<a class="headerlink" href="#id101" title="Link to this heading">#</a></h4>
+<span id="signature-21"></span><h4>Signature<a class="headerlink" href="#id101" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">stage_update_trace</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id102">
-<h4>Description<a class="headerlink" href="#id102" title="Link to this heading">#</a></h4>
+<span id="description-21"></span><h4>Description<a class="headerlink" href="#id102" title="Link to this heading">#</a></h4>
 <p>Return stage update records saved by the forecasting runner.</p>
 </section>
 <section id="id103">
-<h4>Parameters<a class="headerlink" href="#id103" title="Link to this heading">#</a></h4>
+<span id="parameters-21"></span><h4>Parameters<a class="headerlink" href="#id103" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2327,11 +2327,11 @@
 </div>
 </section>
 <section id="id104">
-<h4>Returns<a class="headerlink" href="#id104" title="Link to this heading">#</a></h4>
+<span id="returns-21"></span><h4>Returns<a class="headerlink" href="#id104" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id105">
-<h4>Minimal Use<a class="headerlink" href="#id105" title="Link to this heading">#</a></h4>
+<span id="minimal-use-21"></span><h4>Minimal Use<a class="headerlink" href="#id105" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.stage_update_trace(...)</span>
@@ -2340,20 +2340,20 @@
 </section>
 </section>
 <section id="training-loss-trace">
-<h3>training_loss_trace<a class="headerlink" href="#training-loss-trace" title="Link to this heading">#</a></h3>
+<span id="training_loss_trace"></span><h3>training_loss_trace<a class="headerlink" href="#training-loss-trace" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.training_loss_trace</span></code></p>
 <section id="id106">
-<h4>Signature<a class="headerlink" href="#id106" title="Link to this heading">#</a></h4>
+<span id="signature-22"></span><h4>Signature<a class="headerlink" href="#id106" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">training_loss_trace</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">load_pickle</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id107">
-<h4>Description<a class="headerlink" href="#id107" title="Link to this heading">#</a></h4>
+<span id="description-22"></span><h4>Description<a class="headerlink" href="#id107" title="Link to this heading">#</a></h4>
 <p>Read saved model sidecars and return in-sample fit metrics by origin.</p>
 </section>
 <section id="id108">
-<h4>Parameters<a class="headerlink" href="#id108" title="Link to this heading">#</a></h4>
+<span id="parameters-22"></span><h4>Parameters<a class="headerlink" href="#id108" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2378,11 +2378,11 @@
 </div>
 </section>
 <section id="id109">
-<h4>Returns<a class="headerlink" href="#id109" title="Link to this heading">#</a></h4>
+<span id="returns-22"></span><h4>Returns<a class="headerlink" href="#id109" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id110">
-<h4>Minimal Use<a class="headerlink" href="#id110" title="Link to this heading">#</a></h4>
+<span id="minimal-use-22"></span><h4>Minimal Use<a class="headerlink" href="#id110" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.training_loss_trace(...)</span>
@@ -2391,20 +2391,20 @@
 </section>
 </section>
 <section id="tuning-objective-trace">
-<h3>tuning_objective_trace<a class="headerlink" href="#tuning-objective-trace" title="Link to this heading">#</a></h3>
+<span id="tuning_objective_trace"></span><h3>tuning_objective_trace<a class="headerlink" href="#tuning-objective-trace" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.tuning_objective_trace</span></code></p>
 <section id="id111">
-<h4>Signature<a class="headerlink" href="#id111" title="Link to this heading">#</a></h4>
+<span id="signature-23"></span><h4>Signature<a class="headerlink" href="#id111" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">tuning_objective_trace</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id112">
-<h4>Description<a class="headerlink" href="#id112" title="Link to this heading">#</a></h4>
+<span id="description-23"></span><h4>Description<a class="headerlink" href="#id112" title="Link to this heading">#</a></h4>
 <p>Return best validation objective over origins for tuned models.</p>
 </section>
 <section id="id113">
-<h4>Parameters<a class="headerlink" href="#id113" title="Link to this heading">#</a></h4>
+<span id="parameters-23"></span><h4>Parameters<a class="headerlink" href="#id113" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2424,11 +2424,11 @@
 </div>
 </section>
 <section id="id114">
-<h4>Returns<a class="headerlink" href="#id114" title="Link to this heading">#</a></h4>
+<span id="returns-23"></span><h4>Returns<a class="headerlink" href="#id114" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id115">
-<h4>Minimal Use<a class="headerlink" href="#id115" title="Link to this heading">#</a></h4>
+<span id="minimal-use-23"></span><h4>Minimal Use<a class="headerlink" href="#id115" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.tuning_objective_trace(...)</span>
@@ -2437,20 +2437,20 @@
 </section>
 </section>
 <section id="tuning-score-distribution">
-<h3>tuning_score_distribution<a class="headerlink" href="#tuning-score-distribution" title="Link to this heading">#</a></h3>
+<span id="tuning_score_distribution"></span><h3>tuning_score_distribution<a class="headerlink" href="#tuning-score-distribution" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.tuning_score_distribution</span></code></p>
 <section id="id116">
-<h4>Signature<a class="headerlink" href="#id116" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">tuning_score_distribution</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;model&#39;</span><span class="p">,</span> <span class="s1">&#39;horizon&#39;</span><span class="p">,</span> <span class="s1">&#39;method&#39;</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+<span id="signature-24"></span><h4>Signature<a class="headerlink" href="#id116" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">tuning_score_distribution</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">group_by</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'model'</span><span class="p">,</span> <span class="s1">'horizon'</span><span class="p">,</span> <span class="s1">'method'</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id117">
-<h4>Description<a class="headerlink" href="#id117" title="Link to this heading">#</a></h4>
+<span id="description-24"></span><h4>Description<a class="headerlink" href="#id117" title="Link to this heading">#</a></h4>
 <p>Summarize the distribution of selected validation scores over origins.</p>
 </section>
 <section id="id118">
-<h4>Parameters<a class="headerlink" href="#id118" title="Link to this heading">#</a></h4>
+<span id="parameters-24"></span><h4>Parameters<a class="headerlink" href="#id118" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2475,11 +2475,11 @@
 </div>
 </section>
 <section id="id119">
-<h4>Returns<a class="headerlink" href="#id119" title="Link to this heading">#</a></h4>
+<span id="returns-24"></span><h4>Returns<a class="headerlink" href="#id119" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id120">
-<h4>Minimal Use<a class="headerlink" href="#id120" title="Link to this heading">#</a></h4>
+<span id="minimal-use-24"></span><h4>Minimal Use<a class="headerlink" href="#id120" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.tuning_score_distribution(...)</span>
@@ -2488,20 +2488,20 @@
 </section>
 </section>
 <section id="tuning-trace">
-<h3>tuning_trace<a class="headerlink" href="#tuning-trace" title="Link to this heading">#</a></h3>
+<span id="tuning_trace"></span><h3>tuning_trace<a class="headerlink" href="#tuning-trace" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecast_analysis.core.tuning_trace</span></code></p>
 <section id="id121">
-<h4>Signature<a class="headerlink" href="#id121" title="Link to this heading">#</a></h4>
+<span id="signature-25"></span><h4>Signature<a class="headerlink" href="#id121" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecast_analysis</span><span class="o">.</span><span class="n">tuning_trace</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id122">
-<h4>Description<a class="headerlink" href="#id122" title="Link to this heading">#</a></h4>
+<span id="description-25"></span><h4>Description<a class="headerlink" href="#id122" title="Link to this heading">#</a></h4>
 <p>Return one row per forecast row carrying parameter-selection metadata.</p>
 </section>
 <section id="id123">
-<h4>Parameters<a class="headerlink" href="#id123" title="Link to this heading">#</a></h4>
+<span id="parameters-25"></span><h4>Parameters<a class="headerlink" href="#id123" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2521,11 +2521,11 @@
 </div>
 </section>
 <section id="id124">
-<h4>Returns<a class="headerlink" href="#id124" title="Link to this heading">#</a></h4>
+<span id="returns-25"></span><h4>Returns<a class="headerlink" href="#id124" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id125">
-<h4>Minimal Use<a class="headerlink" href="#id125" title="Link to this heading">#</a></h4>
+<span id="minimal-use-25"></span><h4>Minimal Use<a class="headerlink" href="#id125" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecast_analysis.tuning_trace(...)</span>
@@ -2571,7 +2571,7 @@
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
@@ -2838,8 +2838,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -2866,7 +2866,6 @@
 
   <p class="sphinx-version">
     Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
-    <br/>
   </p>
 </div>
       

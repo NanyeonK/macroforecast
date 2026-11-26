@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 
@@ -27,26 +26,26 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=6a604523" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
     <script src="../_static/documentation_options.js?v=c9f84ce7"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../_static/design-tabs.js?v=fcb327ea"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference/model_selection';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -54,6 +53,7 @@
     <link rel="next" title="macroforecast.forecasting" href="forecasting.html" />
     <link rel="prev" title="macroforecast.model_ensemble" href="model_ensemble.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5" />
   
@@ -103,7 +103,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -234,7 +234,7 @@
         <div class="navbar-item navbar-persistent--container">
           
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -245,15 +245,15 @@
         <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -290,7 +290,7 @@
   
     <div class="navbar-persistent--mobile">
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -299,7 +299,7 @@
   
 
   
-    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -313,7 +313,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
@@ -418,15 +418,15 @@
           <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -461,7 +461,7 @@
   </div>
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
   <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
     <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
   </svg>
@@ -502,7 +502,7 @@
 <li class="toctree-l1"><a class="reference internal" href="window.html">macroforecast.window</a></li>
 <li class="toctree-l1"><a class="reference internal" href="models.html">macroforecast.models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_ensemble.html">macroforecast.model_ensemble</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.model_selection</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">macroforecast.model_selection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecasting.html">macroforecast.forecasting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
 </ul>
@@ -571,7 +571,7 @@
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="../index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
+        <i class="fa-solid fa-house"></i>
       </a>
     </li>
     
@@ -595,7 +595,7 @@
                 <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-model-selection">
-<h1>macroforecast.model_selection<a class="headerlink" href="#macroforecast-model-selection" title="Link to this heading">#</a></h1>
+<span id="macroforecastmodel_selection"></span><h1>macroforecast.model_selection<a class="headerlink" href="#macroforecast-model-selection" title="Link to this heading">#</a></h1>
 <p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
 <p>Hyperparameter distributions, search specs, search runners, and selection results.</p>
 <p>Guide context: <a class="reference internal" href="../guide/concepts/models_and_arms.html"><span class="std std-doc">../guide/concepts/models_and_arms.md</span></a>.</p>
@@ -704,11 +704,11 @@
 <section id="callable-and-class-reference">
 <h2>Callable And Class Reference<a class="headerlink" href="#callable-and-class-reference" title="Link to this heading">#</a></h2>
 <section id="select-by-information-criterion">
-<h3>select_by_information_criterion<a class="headerlink" href="#select-by-information-criterion" title="Link to this heading">#</a></h3>
+<span id="select_by_information_criterion"></span><h3>select_by_information_criterion<a class="headerlink" href="#select-by-information-criterion" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.search.select_by_information_criterion</span></code></p>
 <section id="signature">
 <h4>Signature<a class="headerlink" href="#signature" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">select_by_information_criterion</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="s2">&quot;&#39;str | Callable[..., Any] | ModelSpec&#39;&quot;</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">search</span><span class="p">:</span> <span class="n">SearchSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">criterion</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bic&quot;</span><span class="p">,</span> <span class="n">fixed_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchResult</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">select_by_information_criterion</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="s2">"'str | Callable[..., Any] | ModelSpec'"</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">search</span><span class="p">:</span> <span class="n">SearchSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">criterion</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"bic"</span><span class="p">,</span> <span class="n">fixed_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchResult</span>
 </pre></div>
 </div>
 </section>
@@ -789,17 +789,17 @@ to the autoregression and the factor model. The fitted estimator must expose
 <h3>ParamDistribution<a class="headerlink" href="#paramdistribution" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.types.ParamDistribution</span></code></p>
 <section id="id1">
-<h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<span id="signature-1"></span><h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">ParamDistribution</span><span class="p">(</span><span class="n">kind</span><span class="p">:</span> <span class="n">DistributionKind</span><span class="p">,</span> <span class="n">low</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">choices</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">())</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
-<h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<span id="description-1"></span><h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
 <p>Sampling rule for one hyperparameter.</p>
 </section>
 <section id="id3">
-<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
+<span id="parameters-1"></span><h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -834,11 +834,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id4">
-<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
+<span id="returns-1"></span><h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id5">
-<h4>Minimal Use<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
+<span id="minimal-use-1"></span><h4>Minimal Use<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.model_selection.ParamDistribution(...)</span>
@@ -906,17 +906,17 @@ to the autoregression and the factor model. The fitted estimator must expose
 <h3>SearchError<a class="headerlink" href="#searcherror" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.types.SearchError</span></code></p>
 <section id="id6">
-<h4>Signature<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
+<span id="signature-2"></span><h4>Signature<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">SearchError</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">trials</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id7">
-<h4>Description<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
+<span id="description-2"></span><h4>Description<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
 <p>Raised when parameter search cannot select any successful candidate.</p>
 </section>
 <section id="id8">
-<h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
+<span id="parameters-2"></span><h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -941,11 +941,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id9">
-<h4>Returns<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
+<span id="returns-2"></span><h4>Returns<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id10">
-<h4>Minimal Use<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
+<span id="minimal-use-2"></span><h4>Minimal Use<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.model_selection.SearchError(...)</span>
@@ -957,17 +957,17 @@ to the autoregression and the factor model. The fitted estimator must expose
 <h3>SearchResult<a class="headerlink" href="#searchresult" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.types.SearchResult</span></code></p>
 <section id="id11">
-<h4>Signature<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
+<span id="signature-3"></span><h4>Signature<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">SearchResult</span><span class="p">(</span><span class="n">best_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">best_score</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">trials</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">MetricLike</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id12">
-<h4>Description<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
+<span id="description-3"></span><h4>Description<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
 <p>Result returned by <code class="docutils literal notranslate"><span class="pre">select_params</span></code>.</p>
 </section>
 <section id="id13">
-<h4>Parameters<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
+<span id="parameters-3"></span><h4>Parameters<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1017,11 +1017,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id14">
-<h4>Returns<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
+<span id="returns-3"></span><h4>Returns<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id15">
-<h4>Minimal Use<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
+<span id="minimal-use-3"></span><h4>Minimal Use<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.model_selection.SearchResult(...)</span>
@@ -1029,7 +1029,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id16">
-<h4>Dataclass Fields<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
+<span id="dataclass-fields-1"></span><h4>Dataclass Fields<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -1071,7 +1071,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id17">
-<h4>Public Methods<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
+<span id="public-methods-1"></span><h4>Public Methods<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Method</p></th>
@@ -1105,17 +1105,23 @@ to the autoregression and the factor model. The fitted estimator must expose
 <h3>SearchSpec<a class="headerlink" href="#searchspec" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.types.SearchSpec</span></code></p>
 <section id="id18">
-<h4>Signature<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">SearchSpec</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">param_grid</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParamDistribution</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">population_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">generations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">mutation_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">custom_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">custom_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">criterion</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">validation_splitter</span><span class="p">:</span> <span class="n">ValidationSplitterSpec</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">&quot;mean_split&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<span id="signature-4"></span><h4>Signature<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">SearchSpec</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">param_grid</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParamDistribution</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">population_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">generations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">mutation_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">custom_func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">custom_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">criterion</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">validation_splitter</span><span class="p">:</span> <span class="n">ValidationSplitterSpec</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">"mean_split"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id19">
-<h4>Description<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
+<span id="description-4"></span><h4>Description<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
 <p>Parameter-search specification consumed by <code class="docutils literal notranslate"><span class="pre">select_params</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">random_state</span></code> defaults to 0, so the stochastic methods – <code class="docutils literal notranslate"><span class="pre">random</span></code>,
+<code class="docutils literal notranslate"><span class="pre">genetic</span></code>, <code class="docutils literal notranslate"><span class="pre">bayesian</span></code> and <code class="docutils literal notranslate"><span class="pre">custom</span></code> – return the same selection on
+repeated calls. Set it to <code class="docutils literal notranslate"><span class="pre">None</span></code> to seed from OS entropy instead. The
+<code class="docutils literal notranslate"><span class="pre">grid</span></code>, <code class="docutils literal notranslate"><span class="pre">cv_path</span></code>, <code class="docutils literal notranslate"><span class="pre">fixed</span></code> and <code class="docutils literal notranslate"><span class="pre">information_criterion</span></code> methods
+enumerate their candidates and never read the generator, so the value is
+carried but inert for them.</p>
 </section>
 <section id="id20">
-<h4>Parameters<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
+<span id="parameters-4"></span><h4>Parameters<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1148,7 +1154,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
 <td><p>positional or keyword</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">population_size</span></code></p></td>
 <td><p>positional or keyword</p></td>
@@ -1200,11 +1206,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id21">
-<h4>Returns<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
+<span id="returns-4"></span><h4>Returns<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id22">
-<h4>Minimal Use<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
+<span id="minimal-use-4"></span><h4>Minimal Use<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.model_selection.SearchSpec(...)</span>
@@ -1212,7 +1218,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id23">
-<h4>Dataclass Fields<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
+<span id="dataclass-fields-2"></span><h4>Dataclass Fields<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -1239,7 +1245,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">population_size</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
@@ -1282,7 +1288,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id24">
-<h4>Public Methods<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
+<span id="public-methods-2"></span><h4>Public Methods<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Method</p></th>
@@ -1312,17 +1318,17 @@ to the autoregression and the factor model. The fitted estimator must expose
 <h3>ValidationSplitterSpec<a class="headerlink" href="#validationsplitterspec" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.types.ValidationSplitterSpec</span></code></p>
 <section id="id25">
-<h4>Signature<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">ValidationSplitterSpec</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">explicit_folds</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">within_fold</span><span class="p">:</span> <span class="n">WithinFoldMode</span> <span class="o">=</span> <span class="s2">&quot;fixed&quot;</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+<span id="signature-5"></span><h4>Signature<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">ValidationSplitterSpec</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">explicit_folds</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">within_fold</span><span class="p">:</span> <span class="n">WithinFoldMode</span> <span class="o">=</span> <span class="s2">"fixed"</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id26">
-<h4>Description<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
+<span id="description-5"></span><h4>Description<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
 <p>Validation-split rule carried by a <code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code>.</p>
 </section>
 <section id="id27">
-<h4>Parameters<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
+<span id="parameters-5"></span><h4>Parameters<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1357,11 +1363,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id28">
-<h4>Returns<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
+<span id="returns-5"></span><h4>Returns<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id29">
-<h4>Minimal Use<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
+<span id="minimal-use-5"></span><h4>Minimal Use<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.model_selection.ValidationSplitterSpec(...)</span>
@@ -1369,7 +1375,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id30">
-<h4>Dataclass Fields<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
+<span id="dataclass-fields-3"></span><h4>Dataclass Fields<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -1399,7 +1405,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id31">
-<h4>Public Methods<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
+<span id="public-methods-3"></span><h4>Public Methods<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Method</p></th>
@@ -1418,20 +1424,22 @@ to the autoregression and the factor model. The fitted estimator must expose
 </section>
 </section>
 <section id="bayesian-search">
-<h3>bayesian_search<a class="headerlink" href="#bayesian-search" title="Link to this heading">#</a></h3>
+<span id="bayesian_search"></span><h3>bayesian_search<a class="headerlink" href="#bayesian-search" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.builders.bayesian_search</span></code></p>
 <section id="id32">
-<h4>Signature<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">bayesian_search</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParamDistribution</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">&quot;mean_split&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
+<span id="signature-6"></span><h4>Signature<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">bayesian_search</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParamDistribution</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">"mean_split"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id33">
-<h4>Description<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
+<span id="description-6"></span><h4>Description<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
 <p>Sequential Gaussian-process Bayesian search request.</p>
+<p><code class="docutils literal notranslate"><span class="pre">random_state</span></code> defaults to 0 so repeated searches reproduce. Pass
+<code class="docutils literal notranslate"><span class="pre">random_state=None</span></code> to draw a fresh sample on every call.</p>
 </section>
 <section id="id34">
-<h4>Parameters<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
+<span id="parameters-6"></span><h4>Parameters<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1454,7 +1462,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
 <td><p>keyword only</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">score_aggregation</span></code></p></td>
 <td><p>keyword only</p></td>
@@ -1466,11 +1474,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id35">
-<h4>Returns<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
+<span id="returns-6"></span><h4>Returns<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code></p>
 </section>
 <section id="id36">
-<h4>Minimal Use<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
+<span id="minimal-use-6"></span><h4>Minimal Use<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.bayesian_search(...)</span>
@@ -1482,17 +1490,17 @@ to the autoregression and the factor model. The fitted estimator must expose
 <h3>choice<a class="headerlink" href="#choice" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.builders.choice</span></code></p>
 <section id="id37">
-<h4>Signature<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
+<span id="signature-7"></span><h4>Signature<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ParamDistribution</span>
 </pre></div>
 </div>
 </section>
 <section id="id38">
-<h4>Description<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
+<span id="description-7"></span><h4>Description<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
 <p>Categorical distribution over explicit values.</p>
 </section>
 <section id="id39">
-<h4>Parameters<a class="headerlink" href="#id39" title="Link to this heading">#</a></h4>
+<span id="parameters-7"></span><h4>Parameters<a class="headerlink" href="#id39" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1512,11 +1520,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id40">
-<h4>Returns<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
+<span id="returns-7"></span><h4>Returns<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ParamDistribution</span></code></p>
 </section>
 <section id="id41">
-<h4>Minimal Use<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
+<span id="minimal-use-7"></span><h4>Minimal Use<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.choice(...)</span>
@@ -1525,20 +1533,23 @@ to the autoregression and the factor model. The fitted estimator must expose
 </section>
 </section>
 <section id="custom-search">
-<h3>custom_search<a class="headerlink" href="#custom-search" title="Link to this heading">#</a></h3>
+<span id="custom_search"></span><h3>custom_search<a class="headerlink" href="#custom-search" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.builders.custom_search</span></code></p>
 <section id="id42">
-<h4>Signature<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">custom_search</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">param_grid</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParamDistribution</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">&quot;mean_split&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
+<span id="signature-8"></span><h4>Signature<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">custom_search</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">param_grid</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">param_distributions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParamDistribution</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">metadata</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">"mean_split"</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id43">
-<h4>Description<a class="headerlink" href="#id43" title="Link to this heading">#</a></h4>
+<span id="description-8"></span><h4>Description<a class="headerlink" href="#id43" title="Link to this heading">#</a></h4>
 <p>Build a user-supplied parameter-search request.</p>
+<p><code class="docutils literal notranslate"><span class="pre">random_state</span></code> defaults to 0 so repeated searches reproduce, including the
+generator handed to <code class="docutils literal notranslate"><span class="pre">func</span></code>. Pass <code class="docutils literal notranslate"><span class="pre">random_state=None</span></code> to draw a fresh
+sample on every call.</p>
 </section>
 <section id="id44">
-<h4>Parameters<a class="headerlink" href="#id44" title="Link to this heading">#</a></h4>
+<span id="parameters-8"></span><h4>Parameters<a class="headerlink" href="#id44" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1576,7 +1587,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
 <td><p>keyword only</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">metadata</span></code></p></td>
 <td><p>keyword only</p></td>
@@ -1598,11 +1609,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id45">
-<h4>Returns<a class="headerlink" href="#id45" title="Link to this heading">#</a></h4>
+<span id="returns-8"></span><h4>Returns<a class="headerlink" href="#id45" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code></p>
 </section>
 <section id="id46">
-<h4>Minimal Use<a class="headerlink" href="#id46" title="Link to this heading">#</a></h4>
+<span id="minimal-use-8"></span><h4>Minimal Use<a class="headerlink" href="#id46" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.custom_search(...)</span>
@@ -1611,20 +1622,20 @@ to the autoregression and the factor model. The fitted estimator must expose
 </section>
 </section>
 <section id="cv-path">
-<h3>cv_path<a class="headerlink" href="#cv-path" title="Link to this heading">#</a></h3>
+<span id="cv_path"></span><h3>cv_path<a class="headerlink" href="#cv-path" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.builders.cv_path</span></code></p>
 <section id="id47">
-<h4>Signature<a class="headerlink" href="#id47" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">cv_path</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">&quot;mean_split&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
+<span id="signature-9"></span><h4>Signature<a class="headerlink" href="#id47" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">cv_path</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"alpha"</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">"mean_split"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id48">
-<h4>Description<a class="headerlink" href="#id48" title="Link to this heading">#</a></h4>
+<span id="description-9"></span><h4>Description<a class="headerlink" href="#id48" title="Link to this heading">#</a></h4>
 <p>Evaluate an ordered one-parameter path, commonly lasso/ridge alpha values.</p>
 </section>
 <section id="id49">
-<h4>Parameters<a class="headerlink" href="#id49" title="Link to this heading">#</a></h4>
+<span id="parameters-9"></span><h4>Parameters<a class="headerlink" href="#id49" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1654,11 +1665,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id50">
-<h4>Returns<a class="headerlink" href="#id50" title="Link to this heading">#</a></h4>
+<span id="returns-9"></span><h4>Returns<a class="headerlink" href="#id50" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code></p>
 </section>
 <section id="id51">
-<h4>Minimal Use<a class="headerlink" href="#id51" title="Link to this heading">#</a></h4>
+<span id="minimal-use-9"></span><h4>Minimal Use<a class="headerlink" href="#id51" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.cv_path(...)</span>
@@ -1667,20 +1678,20 @@ to the autoregression and the factor model. The fitted estimator must expose
 </section>
 </section>
 <section id="explicit-folds">
-<h3>explicit_folds<a class="headerlink" href="#explicit-folds" title="Link to this heading">#</a></h3>
+<span id="explicit_folds"></span><h3>explicit_folds<a class="headerlink" href="#explicit-folds" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.splitters.explicit_folds</span></code></p>
 <section id="id52">
-<h4>Signature<a class="headerlink" href="#id52" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">explicit_folds</span><span class="p">(</span><span class="n">boundaries</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">within_fold</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;fixed&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationSplitterSpec</span>
+<span id="signature-10"></span><h4>Signature<a class="headerlink" href="#id52" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">explicit_folds</span><span class="p">(</span><span class="n">boundaries</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">within_fold</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"fixed"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationSplitterSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id53">
-<h4>Description<a class="headerlink" href="#id53" title="Link to this heading">#</a></h4>
+<span id="description-10"></span><h4>Description<a class="headerlink" href="#id53" title="Link to this heading">#</a></h4>
 <p>Build fixed-boundary validation folds for a <code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code>.</p>
 </section>
 <section id="id54">
-<h4>Parameters<a class="headerlink" href="#id54" title="Link to this heading">#</a></h4>
+<span id="parameters-10"></span><h4>Parameters<a class="headerlink" href="#id54" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1705,11 +1716,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id55">
-<h4>Returns<a class="headerlink" href="#id55" title="Link to this heading">#</a></h4>
+<span id="returns-10"></span><h4>Returns<a class="headerlink" href="#id55" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ValidationSplitterSpec</span></code></p>
 </section>
 <section id="id56">
-<h4>Minimal Use<a class="headerlink" href="#id56" title="Link to this heading">#</a></h4>
+<span id="minimal-use-10"></span><h4>Minimal Use<a class="headerlink" href="#id56" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.explicit_folds(...)</span>
@@ -1721,17 +1732,19 @@ to the autoregression and the factor model. The fitted estimator must expose
 <h3>fixed<a class="headerlink" href="#fixed" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.builders.fixed</span></code></p>
 <section id="id57">
-<h4>Signature<a class="headerlink" href="#id57" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">fixed</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">&quot;mean_split&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
+<span id="signature-11"></span><h4>Signature<a class="headerlink" href="#id57" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">fixed</span><span class="p">(</span><span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">"mean_split"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id58">
-<h4>Description<a class="headerlink" href="#id58" title="Link to this heading">#</a></h4>
+<span id="description-11"></span><h4>Description<a class="headerlink" href="#id58" title="Link to this heading">#</a></h4>
 <p>Evaluate one fixed parameter set without tuning.</p>
+<p><code class="docutils literal notranslate"><span class="pre">random_state</span></code> is carried for consistency with the stochastic builders. A
+fixed search enumerates one candidate and never draws from the generator.</p>
 </section>
 <section id="id59">
-<h4>Parameters<a class="headerlink" href="#id59" title="Link to this heading">#</a></h4>
+<span id="parameters-11"></span><h4>Parameters<a class="headerlink" href="#id59" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1749,7 +1762,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
 <td><p>keyword only</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">score_aggregation</span></code></p></td>
 <td><p>keyword only</p></td>
@@ -1761,11 +1774,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id60">
-<h4>Returns<a class="headerlink" href="#id60" title="Link to this heading">#</a></h4>
+<span id="returns-11"></span><h4>Returns<a class="headerlink" href="#id60" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code></p>
 </section>
 <section id="id61">
-<h4>Minimal Use<a class="headerlink" href="#id61" title="Link to this heading">#</a></h4>
+<span id="minimal-use-11"></span><h4>Minimal Use<a class="headerlink" href="#id61" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.fixed(...)</span>
@@ -1774,20 +1787,22 @@ to the autoregression and the factor model. The fitted estimator must expose
 </section>
 </section>
 <section id="genetic-search">
-<h3>genetic_search<a class="headerlink" href="#genetic-search" title="Link to this heading">#</a></h3>
+<span id="genetic_search"></span><h3>genetic_search<a class="headerlink" href="#genetic-search" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.builders.genetic_search</span></code></p>
 <section id="id62">
-<h4>Signature<a class="headerlink" href="#id62" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">genetic_search</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParamDistribution</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">population_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">generations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">mutation_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">&quot;mean_split&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
+<span id="signature-12"></span><h4>Signature<a class="headerlink" href="#id62" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">genetic_search</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParamDistribution</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">population_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span><span class="p">,</span> <span class="n">generations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">mutation_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">"mean_split"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id63">
-<h4>Description<a class="headerlink" href="#id63" title="Link to this heading">#</a></h4>
+<span id="description-12"></span><h4>Description<a class="headerlink" href="#id63" title="Link to this heading">#</a></h4>
 <p>Lightweight genetic-style stochastic search over parameter distributions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">random_state</span></code> defaults to 0 so repeated searches reproduce. Pass
+<code class="docutils literal notranslate"><span class="pre">random_state=None</span></code> to draw a fresh sample on every call.</p>
 </section>
 <section id="id64">
-<h4>Parameters<a class="headerlink" href="#id64" title="Link to this heading">#</a></h4>
+<span id="parameters-12"></span><h4>Parameters<a class="headerlink" href="#id64" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1820,7 +1835,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
 <td><p>keyword only</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">score_aggregation</span></code></p></td>
 <td><p>keyword only</p></td>
@@ -1832,11 +1847,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id65">
-<h4>Returns<a class="headerlink" href="#id65" title="Link to this heading">#</a></h4>
+<span id="returns-12"></span><h4>Returns<a class="headerlink" href="#id65" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code></p>
 </section>
 <section id="id66">
-<h4>Minimal Use<a class="headerlink" href="#id66" title="Link to this heading">#</a></h4>
+<span id="minimal-use-12"></span><h4>Minimal Use<a class="headerlink" href="#id66" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.genetic_search(...)</span>
@@ -1848,17 +1863,17 @@ to the autoregression and the factor model. The fitted estimator must expose
 <h3>grid<a class="headerlink" href="#grid" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.builders.grid</span></code></p>
 <section id="id67">
-<h4>Signature<a class="headerlink" href="#id67" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">param_grid</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">validation_splitter</span><span class="p">:</span> <span class="n">ValidationSplitterSpec</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">&quot;mean_split&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
+<span id="signature-13"></span><h4>Signature<a class="headerlink" href="#id67" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">param_grid</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">validation_splitter</span><span class="p">:</span> <span class="n">ValidationSplitterSpec</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">"mean_split"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id68">
-<h4>Description<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
+<span id="description-13"></span><h4>Description<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
 <p>Grid-search over explicit parameter values.</p>
 </section>
 <section id="id69">
-<h4>Parameters<a class="headerlink" href="#id69" title="Link to this heading">#</a></h4>
+<span id="parameters-13"></span><h4>Parameters<a class="headerlink" href="#id69" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1888,11 +1903,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id70">
-<h4>Returns<a class="headerlink" href="#id70" title="Link to this heading">#</a></h4>
+<span id="returns-13"></span><h4>Returns<a class="headerlink" href="#id70" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code></p>
 </section>
 <section id="id71">
-<h4>Minimal Use<a class="headerlink" href="#id71" title="Link to this heading">#</a></h4>
+<span id="minimal-use-13"></span><h4>Minimal Use<a class="headerlink" href="#id71" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.grid(...)</span>
@@ -1901,20 +1916,20 @@ to the autoregression and the factor model. The fitted estimator must expose
 </section>
 </section>
 <section id="log-uniform">
-<h3>log_uniform<a class="headerlink" href="#log-uniform" title="Link to this heading">#</a></h3>
+<span id="log_uniform"></span><h3>log_uniform<a class="headerlink" href="#log-uniform" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.builders.log_uniform</span></code></p>
 <section id="id72">
-<h4>Signature<a class="headerlink" href="#id72" title="Link to this heading">#</a></h4>
+<span id="signature-14"></span><h4>Signature<a class="headerlink" href="#id72" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">log_uniform</span><span class="p">(</span><span class="n">low</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParamDistribution</span>
 </pre></div>
 </div>
 </section>
 <section id="id73">
-<h4>Description<a class="headerlink" href="#id73" title="Link to this heading">#</a></h4>
+<span id="description-14"></span><h4>Description<a class="headerlink" href="#id73" title="Link to this heading">#</a></h4>
 <p>Continuous log-uniform distribution for positive parameters.</p>
 </section>
 <section id="id74">
-<h4>Parameters<a class="headerlink" href="#id74" title="Link to this heading">#</a></h4>
+<span id="parameters-14"></span><h4>Parameters<a class="headerlink" href="#id74" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1939,11 +1954,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id75">
-<h4>Returns<a class="headerlink" href="#id75" title="Link to this heading">#</a></h4>
+<span id="returns-14"></span><h4>Returns<a class="headerlink" href="#id75" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ParamDistribution</span></code></p>
 </section>
 <section id="id76">
-<h4>Minimal Use<a class="headerlink" href="#id76" title="Link to this heading">#</a></h4>
+<span id="minimal-use-14"></span><h4>Minimal Use<a class="headerlink" href="#id76" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.log_uniform(...)</span>
@@ -1952,20 +1967,22 @@ to the autoregression and the factor model. The fitted estimator must expose
 </section>
 </section>
 <section id="random-search">
-<h3>random_search<a class="headerlink" href="#random-search" title="Link to this heading">#</a></h3>
+<span id="random_search"></span><h3>random_search<a class="headerlink" href="#random-search" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.builders.random_search</span></code></p>
 <section id="id77">
-<h4>Signature<a class="headerlink" href="#id77" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">random_search</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParamDistribution</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">&quot;mean_split&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
+<span id="signature-15"></span><h4>Signature<a class="headerlink" href="#id77" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">random_search</span><span class="p">(</span><span class="n">param_distributions</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">ParamDistribution</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">"mean_split"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id78">
-<h4>Description<a class="headerlink" href="#id78" title="Link to this heading">#</a></h4>
+<span id="description-15"></span><h4>Description<a class="headerlink" href="#id78" title="Link to this heading">#</a></h4>
 <p>Seeded random search over parameter distributions.</p>
+<p><code class="docutils literal notranslate"><span class="pre">random_state</span></code> defaults to 0 so repeated searches reproduce. Pass
+<code class="docutils literal notranslate"><span class="pre">random_state=None</span></code> to draw a fresh sample on every call.</p>
 </section>
 <section id="id79">
-<h4>Parameters<a class="headerlink" href="#id79" title="Link to this heading">#</a></h4>
+<span id="parameters-15"></span><h4>Parameters<a class="headerlink" href="#id79" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1988,7 +2005,7 @@ to the autoregression and the factor model. The fitted estimator must expose
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
 <td><p>keyword only</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">score_aggregation</span></code></p></td>
 <td><p>keyword only</p></td>
@@ -2000,11 +2017,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id80">
-<h4>Returns<a class="headerlink" href="#id80" title="Link to this heading">#</a></h4>
+<span id="returns-15"></span><h4>Returns<a class="headerlink" href="#id80" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code></p>
 </section>
 <section id="id81">
-<h4>Minimal Use<a class="headerlink" href="#id81" title="Link to this heading">#</a></h4>
+<span id="minimal-use-15"></span><h4>Minimal Use<a class="headerlink" href="#id81" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.random_search(...)</span>
@@ -2016,17 +2033,17 @@ to the autoregression and the factor model. The fitted estimator must expose
 <h3>randint<a class="headerlink" href="#randint" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.builders.randint</span></code></p>
 <section id="id82">
-<h4>Signature<a class="headerlink" href="#id82" title="Link to this heading">#</a></h4>
+<span id="signature-16"></span><h4>Signature<a class="headerlink" href="#id82" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">low</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParamDistribution</span>
 </pre></div>
 </div>
 </section>
 <section id="id83">
-<h4>Description<a class="headerlink" href="#id83" title="Link to this heading">#</a></h4>
+<span id="description-16"></span><h4>Description<a class="headerlink" href="#id83" title="Link to this heading">#</a></h4>
 <p>Inclusive integer distribution.</p>
 </section>
 <section id="id84">
-<h4>Parameters<a class="headerlink" href="#id84" title="Link to this heading">#</a></h4>
+<span id="parameters-16"></span><h4>Parameters<a class="headerlink" href="#id84" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2051,11 +2068,11 @@ to the autoregression and the factor model. The fitted estimator must expose
 </div>
 </section>
 <section id="id85">
-<h4>Returns<a class="headerlink" href="#id85" title="Link to this heading">#</a></h4>
+<span id="returns-16"></span><h4>Returns<a class="headerlink" href="#id85" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ParamDistribution</span></code></p>
 </section>
 <section id="id86">
-<h4>Minimal Use<a class="headerlink" href="#id86" title="Link to this heading">#</a></h4>
+<span id="minimal-use-16"></span><h4>Minimal Use<a class="headerlink" href="#id86" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.randint(...)</span>
@@ -2064,24 +2081,24 @@ to the autoregression and the factor model. The fitted estimator must expose
 </section>
 </section>
 <section id="recursive-threefold">
-<h3>recursive_threefold<a class="headerlink" href="#recursive-threefold" title="Link to this heading">#</a></h3>
+<span id="recursive_threefold"></span><h3>recursive_threefold<a class="headerlink" href="#recursive-threefold" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.splitters.recursive_threefold</span></code></p>
 <section id="id87">
-<h4>Signature<a class="headerlink" href="#id87" title="Link to this heading">#</a></h4>
+<span id="signature-17"></span><h4>Signature<a class="headerlink" href="#id87" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">recursive_threefold</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ValidationSplitterSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id88">
-<h4>Description<a class="headerlink" href="#id88" title="Link to this heading">#</a></h4>
+<span id="description-17"></span><h4>Description<a class="headerlink" href="#id88" title="Link to this heading">#</a></h4>
 <p>Build recursive three-fold validation with expanding train blocks.</p>
 </section>
 <section id="id89">
-<h4>Returns<a class="headerlink" href="#id89" title="Link to this heading">#</a></h4>
+<span id="returns-17"></span><h4>Returns<a class="headerlink" href="#id89" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ValidationSplitterSpec</span></code></p>
 </section>
 <section id="id90">
-<h4>Minimal Use<a class="headerlink" href="#id90" title="Link to this heading">#</a></h4>
+<span id="minimal-use-17"></span><h4>Minimal Use<a class="headerlink" href="#id90" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.recursive_threefold(...)</span>
@@ -2090,16 +2107,16 @@ to the autoregression and the factor model. The fitted estimator must expose
 </section>
 </section>
 <section id="select-params">
-<h3>select_params<a class="headerlink" href="#select-params" title="Link to this heading">#</a></h3>
+<span id="select_params"></span><h3>select_params<a class="headerlink" href="#select-params" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.search.select_params</span></code></p>
 <section id="id91">
-<h4>Signature<a class="headerlink" href="#id91" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">select_params</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">ModelSpec</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">search</span><span class="p">:</span> <span class="n">SearchSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="n">WindowSpec</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">splits</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">MetricLike</span> <span class="o">=</span> <span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="n">maximize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">fixed_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">population_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">generations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mutation_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">allow_non_temporal_splits</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchResult</span>
+<span id="signature-18"></span><h4>Signature<a class="headerlink" href="#id91" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">select_params</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">ModelSpec</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">search</span><span class="p">:</span> <span class="n">SearchSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="n">WindowSpec</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">splits</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">MetricLike</span> <span class="o">=</span> <span class="s2">"mse"</span><span class="p">,</span> <span class="n">maximize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">fixed_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">population_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">generations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mutation_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">allow_non_temporal_splits</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchResult</span>
 </pre></div>
 </div>
 </section>
 <section id="id92">
-<h4>Description<a class="headerlink" href="#id92" title="Link to this heading">#</a></h4>
+<span id="description-18"></span><h4>Description<a class="headerlink" href="#id92" title="Link to this heading">#</a></h4>
 <p>Select model parameters by temporal validation.</p>
 <p><code class="docutils literal notranslate"><span class="pre">model</span></code> can be a model name, a <code class="docutils literal notranslate"><span class="pre">ModelSpec</span></code>, or a callable such as
 <code class="docutils literal notranslate"><span class="pre">macroforecast.models.ridge</span></code> that returns an object with <code class="docutils literal notranslate"><span class="pre">predict(X)</span></code>.
@@ -2107,9 +2124,15 @@ Registered models own their default parameters and hyperparameter spaces.
 This function evaluates parameter candidates. Validation timing can be
 supplied either as a window spec or as explicit integer-position splits
 produced by <code class="docutils literal notranslate"><span class="pre">macroforecast.window</span></code>.</p>
+<p>Stochastic search reproduces by default because <code class="docutils literal notranslate"><span class="pre">SearchSpec.random_state</span></code>
+defaults to 0. The <code class="docutils literal notranslate"><span class="pre">random_state</span></code> argument here is an override for the
+<code class="docutils literal notranslate"><span class="pre">method=</span></code> route, where <code class="docutils literal notranslate"><span class="pre">None</span></code> means “not overriding” rather than “seed
+from entropy”, and passing it alongside <code class="docutils literal notranslate"><span class="pre">search=</span></code> is an error. To opt into
+a fresh draw, build the spec with an explicit <code class="docutils literal notranslate"><span class="pre">None</span></code>, as in
+<code class="docutils literal notranslate"><span class="pre">search=random_search(distributions,</span> <span class="pre">random_state=None)</span></code>.</p>
 </section>
 <section id="id93">
-<h4>Parameters<a class="headerlink" href="#id93" title="Link to this heading">#</a></h4>
+<span id="parameters-17"></span><h4>Parameters<a class="headerlink" href="#id93" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2214,11 +2237,11 @@ produced by <code class="docutils literal notranslate"><span class="pre">macrofo
 </div>
 </section>
 <section id="id94">
-<h4>Returns<a class="headerlink" href="#id94" title="Link to this heading">#</a></h4>
+<span id="returns-18"></span><h4>Returns<a class="headerlink" href="#id94" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">SearchResult</span></code></p>
 </section>
 <section id="id95">
-<h4>Minimal Use<a class="headerlink" href="#id95" title="Link to this heading">#</a></h4>
+<span id="minimal-use-18"></span><h4>Minimal Use<a class="headerlink" href="#id95" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.select_params(...)</span>
@@ -2227,20 +2250,22 @@ produced by <code class="docutils literal notranslate"><span class="pre">macrofo
 </section>
 </section>
 <section id="search-spec">
-<h3>search_spec<a class="headerlink" href="#search-spec" title="Link to this heading">#</a></h3>
+<span id="search_spec"></span><h3>search_spec<a class="headerlink" href="#search-spec" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.builders.search_spec</span></code></p>
 <section id="id96">
-<h4>Signature<a class="headerlink" href="#id96" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">search_spec</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">ModelSpec</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">population_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">generations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mutation_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">&quot;mean_split&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
+<span id="signature-19"></span><h4>Signature<a class="headerlink" href="#id96" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">search_spec</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">ModelSpec</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">random_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">population_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">generations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">mutation_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">score_aggregation</span><span class="p">:</span> <span class="n">ScoreAggregation</span> <span class="o">=</span> <span class="s2">"mean_split"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SearchSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id97">
-<h4>Description<a class="headerlink" href="#id97" title="Link to this heading">#</a></h4>
+<span id="description-19"></span><h4>Description<a class="headerlink" href="#id97" title="Link to this heading">#</a></h4>
 <p>Build a SearchSpec from a registered model’s owned search space.</p>
+<p><code class="docutils literal notranslate"><span class="pre">random_state</span></code> defaults to 0 so repeated searches reproduce. Pass
+<code class="docutils literal notranslate"><span class="pre">random_state=None</span></code> to draw a fresh sample on every call.</p>
 </section>
 <section id="id98">
-<h4>Parameters<a class="headerlink" href="#id98" title="Link to this heading">#</a></h4>
+<span id="parameters-18"></span><h4>Parameters<a class="headerlink" href="#id98" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2268,7 +2293,7 @@ produced by <code class="docutils literal notranslate"><span class="pre">macrofo
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">random_state</span></code></p></td>
 <td><p>keyword only</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">n_iter</span></code></p></td>
 <td><p>keyword only</p></td>
@@ -2300,11 +2325,11 @@ produced by <code class="docutils literal notranslate"><span class="pre">macrofo
 </div>
 </section>
 <section id="id99">
-<h4>Returns<a class="headerlink" href="#id99" title="Link to this heading">#</a></h4>
+<span id="returns-19"></span><h4>Returns<a class="headerlink" href="#id99" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code></p>
 </section>
 <section id="id100">
-<h4>Minimal Use<a class="headerlink" href="#id100" title="Link to this heading">#</a></h4>
+<span id="minimal-use-19"></span><h4>Minimal Use<a class="headerlink" href="#id100" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.search_spec(...)</span>
@@ -2316,17 +2341,17 @@ produced by <code class="docutils literal notranslate"><span class="pre">macrofo
 <h3>uniform<a class="headerlink" href="#uniform" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.builders.uniform</span></code></p>
 <section id="id101">
-<h4>Signature<a class="headerlink" href="#id101" title="Link to this heading">#</a></h4>
+<span id="signature-20"></span><h4>Signature<a class="headerlink" href="#id101" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">high</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParamDistribution</span>
 </pre></div>
 </div>
 </section>
 <section id="id102">
-<h4>Description<a class="headerlink" href="#id102" title="Link to this heading">#</a></h4>
+<span id="description-20"></span><h4>Description<a class="headerlink" href="#id102" title="Link to this heading">#</a></h4>
 <p>Continuous uniform distribution.</p>
 </section>
 <section id="id103">
-<h4>Parameters<a class="headerlink" href="#id103" title="Link to this heading">#</a></h4>
+<span id="parameters-19"></span><h4>Parameters<a class="headerlink" href="#id103" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2351,11 +2376,11 @@ produced by <code class="docutils literal notranslate"><span class="pre">macrofo
 </div>
 </section>
 <section id="id104">
-<h4>Returns<a class="headerlink" href="#id104" title="Link to this heading">#</a></h4>
+<span id="returns-20"></span><h4>Returns<a class="headerlink" href="#id104" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ParamDistribution</span></code></p>
 </section>
 <section id="id105">
-<h4>Minimal Use<a class="headerlink" href="#id105" title="Link to this heading">#</a></h4>
+<span id="minimal-use-20"></span><h4>Minimal Use<a class="headerlink" href="#id105" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.uniform(...)</span>
@@ -2364,20 +2389,20 @@ produced by <code class="docutils literal notranslate"><span class="pre">macrofo
 </section>
 </section>
 <section id="validation-splitter">
-<h3>validation_splitter<a class="headerlink" href="#validation-splitter" title="Link to this heading">#</a></h3>
+<span id="validation_splitter"></span><h3>validation_splitter<a class="headerlink" href="#validation-splitter" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.model_selection.splitters.validation_splitter</span></code></p>
 <section id="id106">
-<h4>Signature<a class="headerlink" href="#id106" title="Link to this heading">#</a></h4>
+<span id="signature-21"></span><h4>Signature<a class="headerlink" href="#id106" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">validation_splitter</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationSplitterSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id107">
-<h4>Description<a class="headerlink" href="#id107" title="Link to this heading">#</a></h4>
+<span id="description-21"></span><h4>Description<a class="headerlink" href="#id107" title="Link to this heading">#</a></h4>
 <p>Build a named validation-splitter override for a <code class="docutils literal notranslate"><span class="pre">SearchSpec</span></code>.</p>
 </section>
 <section id="id108">
-<h4>Parameters<a class="headerlink" href="#id108" title="Link to this heading">#</a></h4>
+<span id="parameters-20"></span><h4>Parameters<a class="headerlink" href="#id108" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2402,11 +2427,11 @@ produced by <code class="docutils literal notranslate"><span class="pre">macrofo
 </div>
 </section>
 <section id="id109">
-<h4>Returns<a class="headerlink" href="#id109" title="Link to this heading">#</a></h4>
+<span id="returns-21"></span><h4>Returns<a class="headerlink" href="#id109" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ValidationSplitterSpec</span></code></p>
 </section>
 <section id="id110">
-<h4>Minimal Use<a class="headerlink" href="#id110" title="Link to this heading">#</a></h4>
+<span id="minimal-use-21"></span><h4>Minimal Use<a class="headerlink" href="#id110" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.model_selection.validation_splitter(...)</span>
@@ -2452,7 +2477,7 @@ produced by <code class="docutils literal notranslate"><span class="pre">macrofo
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
@@ -2692,8 +2717,8 @@ produced by <code class="docutils literal notranslate"><span class="pre">macrofo
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -2720,7 +2745,6 @@ produced by <code class="docutils literal notranslate"><span class="pre">macrofo
 
   <p class="sphinx-version">
     Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
-    <br/>
   </p>
 </div>
       

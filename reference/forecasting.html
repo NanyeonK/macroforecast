@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 
@@ -27,26 +26,26 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=6a604523" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=68cfb861" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
     <script src="../_static/documentation_options.js?v=c9f84ce7"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="../_static/design-tabs.js?v=fcb327ea"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference/forecasting';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -54,6 +53,7 @@
     <link rel="next" title="macroforecast.forecast_analysis" href="forecast_analysis.html" />
     <link rel="prev" title="macroforecast.model_selection" href="model_selection.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5" />
   
@@ -103,7 +103,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -234,7 +234,7 @@
         <div class="navbar-item navbar-persistent--container">
           
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -245,15 +245,15 @@
         <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -290,7 +290,7 @@
   
     <div class="navbar-persistent--mobile">
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -299,7 +299,7 @@
   
 
   
-    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -313,7 +313,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
@@ -418,15 +418,15 @@
           <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -461,7 +461,7 @@
   </div>
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
   <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
     <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
   </svg>
@@ -503,7 +503,7 @@
 <li class="toctree-l1"><a class="reference internal" href="models.html">macroforecast.models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_ensemble.html">macroforecast.model_ensemble</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_selection.html">macroforecast.model_selection</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">macroforecast.forecasting</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">macroforecast.forecasting</a></li>
 <li class="toctree-l1"><a class="reference internal" href="forecast_analysis.html">macroforecast.forecast_analysis</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Evaluation And Testing</span></p>
@@ -571,7 +571,7 @@
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="../index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
+        <i class="fa-solid fa-house"></i>
       </a>
     </li>
     
@@ -595,7 +595,7 @@
                 <article class="bd-article">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="macroforecast-forecasting">
-<h1>macroforecast.forecasting<a class="headerlink" href="#macroforecast-forecasting" title="Link to this heading">#</a></h1>
+<span id="macroforecastforecasting"></span><h1>macroforecast.forecasting<a class="headerlink" href="#macroforecast-forecasting" title="Link to this heading">#</a></h1>
 <p><a class="reference internal" href="index.html"><span class="std std-doc">Back to reference</span></a></p>
 <p>Single-model forecasting runner, forecast result objects, checkpoint helpers, and forecast-combination specs.</p>
 <p>Guide context: <a class="reference internal" href="../guide/concepts/running.html"><span class="std std-doc">../guide/concepts/running.md</span></a>.</p>
@@ -712,16 +712,16 @@
 <section id="data-and-module-values">
 <h2>Data And Module Values<a class="headerlink" href="#data-and-module-values" title="Link to this heading">#</a></h2>
 <section id="lean-forecast-columns">
-<h3><code class="docutils literal notranslate"><span class="pre">LEAN_FORECAST_COLUMNS</span></code><a class="headerlink" href="#lean-forecast-columns" title="Link to this heading">#</a></h3>
+<span id="lean_forecast_columns"></span><h3><code class="docutils literal notranslate"><span class="pre">LEAN_FORECAST_COLUMNS</span></code><a class="headerlink" href="#lean-forecast-columns" title="Link to this heading">#</a></h3>
 <p>Kind: <code class="docutils literal notranslate"><span class="pre">data</span></code></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">LEAN_FORECAST_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="s2">&quot;origin_pos&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;prediction&quot;</span><span class="p">,</span> <span class="s2">&quot;actual&quot;</span><span class="p">,</span> <span class="s2">&quot;forecast_policy&quot;</span><span class="p">,</span> <span class="s2">&quot;target_transform&quot;</span><span class="p">,</span> <span class="s2">&quot;variance_prediction&quot;</span><span class="p">,</span> <span class="s2">&quot;vintage_id&quot;</span><span class="p">,</span> <span class="s2">&quot;actuals_vintage_id&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">LEAN_FORECAST_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"target"</span><span class="p">,</span> <span class="s2">"horizon"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="s2">"origin_pos"</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">,</span> <span class="s2">"model"</span><span class="p">,</span> <span class="s2">"prediction"</span><span class="p">,</span> <span class="s2">"actual"</span><span class="p">,</span> <span class="s2">"forecast_policy"</span><span class="p">,</span> <span class="s2">"target_transform"</span><span class="p">,</span> <span class="s2">"variance_prediction"</span><span class="p">,</span> <span class="s2">"vintage_id"</span><span class="p">,</span> <span class="s2">"actuals_vintage_id"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="selection-history-columns">
-<h3><code class="docutils literal notranslate"><span class="pre">SELECTION_HISTORY_COLUMNS</span></code><a class="headerlink" href="#selection-history-columns" title="Link to this heading">#</a></h3>
+<span id="selection_history_columns"></span><h3><code class="docutils literal notranslate"><span class="pre">SELECTION_HISTORY_COLUMNS</span></code><a class="headerlink" href="#selection-history-columns" title="Link to this heading">#</a></h3>
 <p>Kind: <code class="docutils literal notranslate"><span class="pre">data</span></code></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SELECTION_HISTORY_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;arm&quot;</span><span class="p">,</span> <span class="s2">&quot;horizon&quot;</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span><span class="p">,</span> <span class="s2">&quot;origin_pos&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;kind&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span> <span class="s2">&quot;model&quot;</span><span class="p">,</span> <span class="s2">&quot;step&quot;</span><span class="p">,</span> <span class="s2">&quot;method&quot;</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">,</span> <span class="s2">&quot;source&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">SELECTION_HISTORY_COLUMNS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"target"</span><span class="p">,</span> <span class="s2">"arm"</span><span class="p">,</span> <span class="s2">"horizon"</span><span class="p">,</span> <span class="s2">"origin"</span><span class="p">,</span> <span class="s2">"origin_pos"</span><span class="p">,</span> <span class="s2">"date"</span><span class="p">,</span> <span class="s2">"kind"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">,</span> <span class="s2">"model"</span><span class="p">,</span> <span class="s2">"step"</span><span class="p">,</span> <span class="s2">"method"</span><span class="p">,</span> <span class="s2">"score"</span><span class="p">,</span> <span class="s2">"source"</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -885,16 +885,16 @@
 </section>
 </section>
 <section id="load-checkpoint-frame">
-<h3>load_checkpoint_frame<a class="headerlink" href="#load-checkpoint-frame" title="Link to this heading">#</a></h3>
+<span id="load_checkpoint_frame"></span><h3>load_checkpoint_frame<a class="headerlink" href="#load-checkpoint-frame" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.checkpoint.load_checkpoint_frame</span></code></p>
 <section id="id1">
-<h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<span id="signature-1"></span><h4>Signature<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">load_checkpoint_frame</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id2">
-<h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<span id="description-1"></span><h4>Description<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
 <p>Load all persisted lean records as a single frame (empty if none/missing).</p>
 <p>Origin files may carry different wide <code class="docutils literal notranslate"><span class="pre">q_&lt;pct&gt;</span></code> quantile columns (a
 point-only or pre-density-pipeline origin has none); <code class="docutils literal notranslate"><span class="pre">pd.concat</span></code> unions
@@ -908,7 +908,7 @@ row – and every downstream consumer (<code class="docutils literal notranslate
 the forecasts came from a live run or a checkpoint.</p>
 </section>
 <section id="id3">
-<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
+<span id="parameters-1"></span><h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -928,11 +928,11 @@ the forecasts came from a live run or a checkpoint.</p>
 </div>
 </section>
 <section id="id4">
-<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
+<span id="returns-1"></span><h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id5">
-<h4>Minimal Use<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
+<span id="minimal-use-1"></span><h4>Minimal Use<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.load_checkpoint_frame(...)</span>
@@ -941,20 +941,20 @@ the forecasts came from a live run or a checkpoint.</p>
 </section>
 </section>
 <section id="load-selection-history-frame">
-<h3>load_selection_history_frame<a class="headerlink" href="#load-selection-history-frame" title="Link to this heading">#</a></h3>
+<span id="load_selection_history_frame"></span><h3>load_selection_history_frame<a class="headerlink" href="#load-selection-history-frame" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.checkpoint.load_selection_history_frame</span></code></p>
 <section id="id6">
-<h4>Signature<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
+<span id="signature-2"></span><h4>Signature<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">load_selection_history_frame</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id7">
-<h4>Description<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
+<span id="description-2"></span><h4>Description<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
 <p>Load optional selection-history JSONL sidecars from one checkpoint dir.</p>
 </section>
 <section id="id8">
-<h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
+<span id="parameters-2"></span><h4>Parameters<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -974,11 +974,11 @@ the forecasts came from a live run or a checkpoint.</p>
 </div>
 </section>
 <section id="id9">
-<h4>Returns<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
+<span id="returns-2"></span><h4>Returns<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id10">
-<h4>Minimal Use<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
+<span id="minimal-use-2"></span><h4>Minimal Use<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.load_selection_history_frame(...)</span>
@@ -990,17 +990,17 @@ the forecasts came from a live run or a checkpoint.</p>
 <h3>CombinationSpec<a class="headerlink" href="#combinationspec" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.CombinationSpec</span></code></p>
 <section id="id11">
-<h4>Signature<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
+<span id="signature-3"></span><h4>Signature<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">CombinationSpec</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">factory</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
 </pre></div>
 </div>
 </section>
 <section id="id12">
-<h4>Description<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
+<span id="description-3"></span><h4>Description<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
 <p>Forecast-combination request consumed by <code class="docutils literal notranslate"><span class="pre">forecasting.run</span></code>.</p>
 </section>
 <section id="id13">
-<h4>Parameters<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
+<span id="parameters-3"></span><h4>Parameters<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1040,11 +1040,11 @@ the forecasts came from a live run or a checkpoint.</p>
 </div>
 </section>
 <section id="id14">
-<h4>Returns<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
+<span id="returns-3"></span><h4>Returns<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </section>
 <section id="id15">
-<h4>Minimal Use<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
+<span id="minimal-use-3"></span><h4>Minimal Use<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Construct with the signature above:</span>
 <span class="c1"># mf.forecasting.CombinationSpec(...)</span>
@@ -1052,7 +1052,7 @@ the forecasts came from a live run or a checkpoint.</p>
 </div>
 </section>
 <section id="id16">
-<h4>Dataclass Fields<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
+<span id="dataclass-fields-1"></span><h4>Dataclass Fields<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>
@@ -1086,7 +1086,7 @@ the forecasts came from a live run or a checkpoint.</p>
 </div>
 </section>
 <section id="id17">
-<h4>Public Methods<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
+<span id="public-methods-1"></span><h4>Public Methods<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Method</p></th>
@@ -1105,23 +1105,23 @@ the forecasts came from a live run or a checkpoint.</p>
 </section>
 </section>
 <section id="combine-best-n">
-<h3>combine_best_n<a class="headerlink" href="#combine-best-n" title="Link to this heading">#</a></h3>
+<span id="combine_best_n"></span><h3>combine_best_n<a class="headerlink" href="#combine-best-n" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_best_n</span></code></p>
 <section id="id18">
-<h4>Signature<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
+<span id="signature-4"></span><h4>Signature<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_best_n</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id19">
-<h4>Description<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
+<span id="description-4"></span><h4>Description<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
 <p>Average the historically best <code class="docutils literal notranslate"><span class="pre">n</span></code> models by MSPE.</p>
 <p>The ranking at each target date uses only errors observable at the forecast
 origin, so the expanding MSPE is lagged by <code class="docutils literal notranslate"><span class="pre">horizon</span></code> target-date rows
 (a 1-row lag for one-step forecasts).</p>
 </section>
 <section id="id20">
-<h4>Parameters<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
+<span id="parameters-4"></span><h4>Parameters<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1156,11 +1156,11 @@ origin, so the expanding MSPE is lagged by <code class="docutils literal notrans
 </div>
 </section>
 <section id="id21">
-<h4>Returns<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
+<span id="returns-4"></span><h4>Returns<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p>
 </section>
 <section id="id22">
-<h4>Minimal Use<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
+<span id="minimal-use-4"></span><h4>Minimal Use<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_best_n(...)</span>
@@ -1169,20 +1169,20 @@ origin, so the expanding MSPE is lagged by <code class="docutils literal notrans
 </section>
 </section>
 <section id="combine-bates-granger">
-<h3>combine_bates_granger<a class="headerlink" href="#combine-bates-granger" title="Link to this heading">#</a></h3>
+<span id="combine_bates_granger"></span><h3>combine_bates_granger<a class="headerlink" href="#combine-bates-granger" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_bates_granger</span></code></p>
 <section id="id23">
-<h4>Signature<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
+<span id="signature-5"></span><h4>Signature<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_bates_granger</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shrink_to_equal</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id24">
-<h4>Description<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
+<span id="description-5"></span><h4>Description<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
 <p>Bates-Granger (1969) minimum error-variance combination (full covariance).</p>
 </section>
 <section id="id25">
-<h4>Parameters<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
+<span id="parameters-5"></span><h4>Parameters<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1227,11 +1227,11 @@ origin, so the expanding MSPE is lagged by <code class="docutils literal notrans
 </div>
 </section>
 <section id="id26">
-<h4>Returns<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
+<span id="returns-5"></span><h4>Returns<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p>
 </section>
 <section id="id27">
-<h4>Minimal Use<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
+<span id="minimal-use-5"></span><h4>Minimal Use<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_bates_granger(...)</span>
@@ -1240,22 +1240,22 @@ origin, so the expanding MSPE is lagged by <code class="docutils literal notrans
 </section>
 </section>
 <section id="combine-granger-ramanathan">
-<h3>combine_granger_ramanathan<a class="headerlink" href="#combine-granger-ramanathan" title="Link to this heading">#</a></h3>
+<span id="combine_granger_ramanathan"></span><h3>combine_granger_ramanathan<a class="headerlink" href="#combine-granger-ramanathan" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_granger_ramanathan</span></code></p>
 <section id="id28">
-<h4>Signature<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_granger_ramanathan</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variant</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;constrained&quot;</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shrink_to_equal</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
+<span id="signature-6"></span><h4>Signature<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_granger_ramanathan</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variant</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"constrained"</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shrink_to_equal</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id29">
-<h4>Description<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
+<span id="description-6"></span><h4>Description<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
 <p>Granger-Ramanathan (1984) regression combination.</p>
 <p><code class="docutils literal notranslate"><span class="pre">variant</span></code>: <code class="docutils literal notranslate"><span class="pre">&quot;ols&quot;</span></code> (with intercept), <code class="docutils literal notranslate"><span class="pre">&quot;no_intercept&quot;</span></code>, or
 <code class="docutils literal notranslate"><span class="pre">&quot;constrained&quot;</span></code> (no intercept, weights sum to one).</p>
 </section>
 <section id="id30">
-<h4>Parameters<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
+<span id="parameters-6"></span><h4>Parameters<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1305,11 +1305,11 @@ origin, so the expanding MSPE is lagged by <code class="docutils literal notrans
 </div>
 </section>
 <section id="id31">
-<h4>Returns<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
+<span id="returns-6"></span><h4>Returns<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p>
 </section>
 <section id="id32">
-<h4>Minimal Use<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
+<span id="minimal-use-6"></span><h4>Minimal Use<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_granger_ramanathan(...)</span>
@@ -1318,20 +1318,20 @@ origin, so the expanding MSPE is lagged by <code class="docutils literal notrans
 </section>
 </section>
 <section id="combine-constrained-ls">
-<h3>combine_constrained_ls<a class="headerlink" href="#combine-constrained-ls" title="Link to this heading">#</a></h3>
+<span id="combine_constrained_ls"></span><h3>combine_constrained_ls<a class="headerlink" href="#combine-constrained-ls" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_constrained_ls</span></code></p>
 <section id="id33">
-<h4>Signature<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
+<span id="signature-7"></span><h4>Signature<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_constrained_ls</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shrink_to_equal</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id34">
-<h4>Description<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
+<span id="description-7"></span><h4>Description<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
 <p>Non-negative weights summing to one minimising squared combination error.</p>
 </section>
 <section id="id35">
-<h4>Parameters<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
+<span id="parameters-7"></span><h4>Parameters<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1376,11 +1376,11 @@ origin, so the expanding MSPE is lagged by <code class="docutils literal notrans
 </div>
 </section>
 <section id="id36">
-<h4>Returns<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
+<span id="returns-7"></span><h4>Returns<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p>
 </section>
 <section id="id37">
-<h4>Minimal Use<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
+<span id="minimal-use-7"></span><h4>Minimal Use<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_constrained_ls(...)</span>
@@ -1389,20 +1389,20 @@ origin, so the expanding MSPE is lagged by <code class="docutils literal notrans
 </section>
 </section>
 <section id="combine-eigenvector">
-<h3>combine_eigenvector<a class="headerlink" href="#combine-eigenvector" title="Link to this heading">#</a></h3>
+<span id="combine_eigenvector"></span><h3>combine_eigenvector<a class="headerlink" href="#combine-eigenvector" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_eigenvector</span></code></p>
 <section id="id38">
-<h4>Signature<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
+<span id="signature-8"></span><h4>Signature<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_eigenvector</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shrink_to_equal</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id39">
-<h4>Description<a class="headerlink" href="#id39" title="Link to this heading">#</a></h4>
+<span id="description-8"></span><h4>Description<a class="headerlink" href="#id39" title="Link to this heading">#</a></h4>
 <p>Eigenvector (principal-component) combination (Hsiao-Wan).</p>
 </section>
 <section id="id40">
-<h4>Parameters<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
+<span id="parameters-8"></span><h4>Parameters<a class="headerlink" href="#id40" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1447,11 +1447,11 @@ origin, so the expanding MSPE is lagged by <code class="docutils literal notrans
 </div>
 </section>
 <section id="id41">
-<h4>Returns<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
+<span id="returns-8"></span><h4>Returns<a class="headerlink" href="#id41" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p>
 </section>
 <section id="id42">
-<h4>Minimal Use<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
+<span id="minimal-use-8"></span><h4>Minimal Use<a class="headerlink" href="#id42" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_eigenvector(...)</span>
@@ -1460,20 +1460,20 @@ origin, so the expanding MSPE is lagged by <code class="docutils literal notrans
 </section>
 </section>
 <section id="combine-regularized">
-<h3>combine_regularized<a class="headerlink" href="#combine-regularized" title="Link to this heading">#</a></h3>
+<span id="combine_regularized"></span><h3>combine_regularized<a class="headerlink" href="#combine-regularized" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_regularized</span></code></p>
 <section id="id43">
-<h4>Signature<a class="headerlink" href="#id43" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_regularized</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">penalty</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ridge&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">intercept</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shrink_to_equal</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
+<span id="signature-9"></span><h4>Signature<a class="headerlink" href="#id43" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_regularized</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">penalty</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"ridge"</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">intercept</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">min_periods</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shrink_to_equal</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id44">
-<h4>Description<a class="headerlink" href="#id44" title="Link to this heading">#</a></h4>
+<span id="description-9"></span><h4>Description<a class="headerlink" href="#id44" title="Link to this heading">#</a></h4>
 <p>Ridge/Lasso-penalised regression combination (high-dimensional weights).</p>
 </section>
 <section id="id45">
-<h4>Parameters<a class="headerlink" href="#id45" title="Link to this heading">#</a></h4>
+<span id="parameters-9"></span><h4>Parameters<a class="headerlink" href="#id45" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1533,11 +1533,11 @@ origin, so the expanding MSPE is lagged by <code class="docutils literal notrans
 </div>
 </section>
 <section id="id46">
-<h4>Returns<a class="headerlink" href="#id46" title="Link to this heading">#</a></h4>
+<span id="returns-9"></span><h4>Returns<a class="headerlink" href="#id46" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p>
 </section>
 <section id="id47">
-<h4>Minimal Use<a class="headerlink" href="#id47" title="Link to this heading">#</a></h4>
+<span id="minimal-use-9"></span><h4>Minimal Use<a class="headerlink" href="#id47" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_regularized(...)</span>
@@ -1546,16 +1546,16 @@ origin, so the expanding MSPE is lagged by <code class="docutils literal notrans
 </section>
 </section>
 <section id="combine-linear-pool">
-<h3>combine_linear_pool<a class="headerlink" href="#combine-linear-pool" title="Link to this heading">#</a></h3>
+<span id="combine_linear_pool"></span><h3>combine_linear_pool<a class="headerlink" href="#combine-linear-pool" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_linear_pool</span></code></p>
 <section id="id48">
-<h4>Signature<a class="headerlink" href="#id48" title="Link to this heading">#</a></h4>
+<span id="signature-10"></span><h4>Signature<a class="headerlink" href="#id48" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_linear_pool</span><span class="p">(</span><span class="n">means</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">sds</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id49">
-<h4>Description<a class="headerlink" href="#id49" title="Link to this heading">#</a></h4>
+<span id="description-10"></span><h4>Description<a class="headerlink" href="#id49" title="Link to this heading">#</a></h4>
 <p>Linear opinion pool of (Gaussian) density forecasts.</p>
 <p>The combined density is the mixture <code class="docutils literal notranslate"><span class="pre">sum_i</span> <span class="pre">w_i</span> <span class="pre">N(mu_i,</span> <span class="pre">sigma_i^2)</span></code>. <code class="docutils literal notranslate"><span class="pre">means</span></code>
 and <code class="docutils literal notranslate"><span class="pre">sds</span></code> are frames (rows = dates, cols = models); <code class="docutils literal notranslate"><span class="pre">weights</span></code> default to
@@ -1564,7 +1564,7 @@ mixture variance exceeds the weighted component variance, capturing model
 disagreement. If <code class="docutils literal notranslate"><span class="pre">sds</span></code> is omitted the pool reduces to the weighted mean.</p>
 </section>
 <section id="id50">
-<h4>Parameters<a class="headerlink" href="#id50" title="Link to this heading">#</a></h4>
+<span id="parameters-10"></span><h4>Parameters<a class="headerlink" href="#id50" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1594,11 +1594,11 @@ disagreement. If <code class="docutils literal notranslate"><span class="pre">sd
 </div>
 </section>
 <section id="id51">
-<h4>Returns<a class="headerlink" href="#id51" title="Link to this heading">#</a></h4>
+<span id="returns-10"></span><h4>Returns<a class="headerlink" href="#id51" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id52">
-<h4>Minimal Use<a class="headerlink" href="#id52" title="Link to this heading">#</a></h4>
+<span id="minimal-use-10"></span><h4>Minimal Use<a class="headerlink" href="#id52" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_linear_pool(...)</span>
@@ -1607,16 +1607,16 @@ disagreement. If <code class="docutils literal notranslate"><span class="pre">sd
 </section>
 </section>
 <section id="combine-log-pool">
-<h3>combine_log_pool<a class="headerlink" href="#combine-log-pool" title="Link to this heading">#</a></h3>
+<span id="combine_log_pool"></span><h3>combine_log_pool<a class="headerlink" href="#combine-log-pool" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_log_pool</span></code></p>
 <section id="id53">
-<h4>Signature<a class="headerlink" href="#id53" title="Link to this heading">#</a></h4>
+<span id="signature-11"></span><h4>Signature<a class="headerlink" href="#id53" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_log_pool</span><span class="p">(</span><span class="n">means</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">sds</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
 </pre></div>
 </div>
 </section>
 <section id="id54">
-<h4>Description<a class="headerlink" href="#id54" title="Link to this heading">#</a></h4>
+<span id="description-11"></span><h4>Description<a class="headerlink" href="#id54" title="Link to this heading">#</a></h4>
 <p>Logarithmic opinion pool of Gaussian density forecasts.</p>
 <p>The combined density is proportional to <code class="docutils literal notranslate"><span class="pre">prod_i</span> <span class="pre">f_i^{w_i}</span></code>. For Gaussians the
 pool is itself Gaussian with precision <code class="docutils literal notranslate"><span class="pre">tau</span> <span class="pre">=</span> <span class="pre">sum_i</span> <span class="pre">w_i</span> <span class="pre">/</span> <span class="pre">sigma_i^2</span></code> and mean
@@ -1625,7 +1625,7 @@ variance) than the linear pool. Returns a frame with pooled <code class="docutil
 <code class="docutils literal notranslate"><span class="pre">variance</span></code> and <code class="docutils literal notranslate"><span class="pre">sd</span></code>.</p>
 </section>
 <section id="id55">
-<h4>Parameters<a class="headerlink" href="#id55" title="Link to this heading">#</a></h4>
+<span id="parameters-11"></span><h4>Parameters<a class="headerlink" href="#id55" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1655,11 +1655,11 @@ variance) than the linear pool. Returns a frame with pooled <code class="docutil
 </div>
 </section>
 <section id="id56">
-<h4>Returns<a class="headerlink" href="#id56" title="Link to this heading">#</a></h4>
+<span id="returns-11"></span><h4>Returns<a class="headerlink" href="#id56" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.DataFrame</span></code></p>
 </section>
 <section id="id57">
-<h4>Minimal Use<a class="headerlink" href="#id57" title="Link to this heading">#</a></h4>
+<span id="minimal-use-11"></span><h4>Minimal Use<a class="headerlink" href="#id57" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_log_pool(...)</span>
@@ -1668,16 +1668,16 @@ variance) than the linear pool. Returns a frame with pooled <code class="docutil
 </section>
 </section>
 <section id="combine-dmspe">
-<h3>combine_dmspe<a class="headerlink" href="#combine-dmspe" title="Link to this heading">#</a></h3>
+<span id="combine_dmspe"></span><h3>combine_dmspe<a class="headerlink" href="#combine-dmspe" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_inverse_mspe</span></code></p>
 <section id="id58">
-<h4>Signature<a class="headerlink" href="#id58" title="Link to this heading">#</a></h4>
+<span id="signature-12"></span><h4>Signature<a class="headerlink" href="#id58" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_dmspe</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">discount</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">min_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-12</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id59">
-<h4>Description<a class="headerlink" href="#id59" title="Link to this heading">#</a></h4>
+<span id="description-12"></span><h4>Description<a class="headerlink" href="#id59" title="Link to this heading">#</a></h4>
 <p>Combine forecasts with inverse discounted MSPE weights.</p>
 <p>For an h-step forecast the weights at a target date are decided at the
 origin (h target-date steps earlier), so only forecast errors realised on or
@@ -1686,7 +1686,7 @@ before that origin are observable. The error history is therefore lagged by
 the use of not-yet-realised errors for multi-step combinations.</p>
 </section>
 <section id="id60">
-<h4>Parameters<a class="headerlink" href="#id60" title="Link to this heading">#</a></h4>
+<span id="parameters-12"></span><h4>Parameters<a class="headerlink" href="#id60" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1726,11 +1726,11 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </div>
 </section>
 <section id="id61">
-<h4>Returns<a class="headerlink" href="#id61" title="Link to this heading">#</a></h4>
+<span id="returns-12"></span><h4>Returns<a class="headerlink" href="#id61" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p>
 </section>
 <section id="id62">
-<h4>Minimal Use<a class="headerlink" href="#id62" title="Link to this heading">#</a></h4>
+<span id="minimal-use-12"></span><h4>Minimal Use<a class="headerlink" href="#id62" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_dmspe(...)</span>
@@ -1739,16 +1739,16 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </section>
 </section>
 <section id="combine-inverse-mspe">
-<h3>combine_inverse_mspe<a class="headerlink" href="#combine-inverse-mspe" title="Link to this heading">#</a></h3>
+<span id="combine_inverse_mspe"></span><h3>combine_inverse_mspe<a class="headerlink" href="#combine-inverse-mspe" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_inverse_mspe</span></code></p>
 <section id="id63">
-<h4>Signature<a class="headerlink" href="#id63" title="Link to this heading">#</a></h4>
+<span id="signature-13"></span><h4>Signature<a class="headerlink" href="#id63" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_inverse_mspe</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">y_true</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">discount</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">min_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-12</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id64">
-<h4>Description<a class="headerlink" href="#id64" title="Link to this heading">#</a></h4>
+<span id="description-13"></span><h4>Description<a class="headerlink" href="#id64" title="Link to this heading">#</a></h4>
 <p>Combine forecasts with inverse discounted MSPE weights.</p>
 <p>For an h-step forecast the weights at a target date are decided at the
 origin (h target-date steps earlier), so only forecast errors realised on or
@@ -1757,7 +1757,7 @@ before that origin are observable. The error history is therefore lagged by
 the use of not-yet-realised errors for multi-step combinations.</p>
 </section>
 <section id="id65">
-<h4>Parameters<a class="headerlink" href="#id65" title="Link to this heading">#</a></h4>
+<span id="parameters-13"></span><h4>Parameters<a class="headerlink" href="#id65" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1797,11 +1797,11 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </div>
 </section>
 <section id="id66">
-<h4>Returns<a class="headerlink" href="#id66" title="Link to this heading">#</a></h4>
+<span id="returns-13"></span><h4>Returns<a class="headerlink" href="#id66" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p>
 </section>
 <section id="id67">
-<h4>Minimal Use<a class="headerlink" href="#id67" title="Link to this heading">#</a></h4>
+<span id="minimal-use-13"></span><h4>Minimal Use<a class="headerlink" href="#id67" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_inverse_mspe(...)</span>
@@ -1810,20 +1810,20 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </section>
 </section>
 <section id="combine-mean">
-<h3>combine_mean<a class="headerlink" href="#combine-mean" title="Link to this heading">#</a></h3>
+<span id="combine_mean"></span><h3>combine_mean<a class="headerlink" href="#combine-mean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_mean</span></code></p>
 <section id="id68">
-<h4>Signature<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
+<span id="signature-14"></span><h4>Signature<a class="headerlink" href="#id68" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_mean</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id69">
-<h4>Description<a class="headerlink" href="#id69" title="Link to this heading">#</a></h4>
+<span id="description-14"></span><h4>Description<a class="headerlink" href="#id69" title="Link to this heading">#</a></h4>
 <p>Equal-weight average forecast.</p>
 </section>
 <section id="id70">
-<h4>Parameters<a class="headerlink" href="#id70" title="Link to this heading">#</a></h4>
+<span id="parameters-14"></span><h4>Parameters<a class="headerlink" href="#id70" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1843,11 +1843,11 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </div>
 </section>
 <section id="id71">
-<h4>Returns<a class="headerlink" href="#id71" title="Link to this heading">#</a></h4>
+<span id="returns-14"></span><h4>Returns<a class="headerlink" href="#id71" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p>
 </section>
 <section id="id72">
-<h4>Minimal Use<a class="headerlink" href="#id72" title="Link to this heading">#</a></h4>
+<span id="minimal-use-14"></span><h4>Minimal Use<a class="headerlink" href="#id72" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_mean(...)</span>
@@ -1856,20 +1856,20 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </section>
 </section>
 <section id="combine-median">
-<h3>combine_median<a class="headerlink" href="#combine-median" title="Link to this heading">#</a></h3>
+<span id="combine_median"></span><h3>combine_median<a class="headerlink" href="#combine-median" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_median</span></code></p>
 <section id="id73">
-<h4>Signature<a class="headerlink" href="#id73" title="Link to this heading">#</a></h4>
+<span id="signature-15"></span><h4>Signature<a class="headerlink" href="#id73" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_median</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id74">
-<h4>Description<a class="headerlink" href="#id74" title="Link to this heading">#</a></h4>
+<span id="description-15"></span><h4>Description<a class="headerlink" href="#id74" title="Link to this heading">#</a></h4>
 <p>Cross-model median forecast.</p>
 </section>
 <section id="id75">
-<h4>Parameters<a class="headerlink" href="#id75" title="Link to this heading">#</a></h4>
+<span id="parameters-15"></span><h4>Parameters<a class="headerlink" href="#id75" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1889,11 +1889,11 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </div>
 </section>
 <section id="id76">
-<h4>Returns<a class="headerlink" href="#id76" title="Link to this heading">#</a></h4>
+<span id="returns-15"></span><h4>Returns<a class="headerlink" href="#id76" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p>
 </section>
 <section id="id77">
-<h4>Minimal Use<a class="headerlink" href="#id77" title="Link to this heading">#</a></h4>
+<span id="minimal-use-15"></span><h4>Minimal Use<a class="headerlink" href="#id77" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_median(...)</span>
@@ -1902,20 +1902,20 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </section>
 </section>
 <section id="combine-trimmed-mean">
-<h3>combine_trimmed_mean<a class="headerlink" href="#combine-trimmed-mean" title="Link to this heading">#</a></h3>
+<span id="combine_trimmed_mean"></span><h3>combine_trimmed_mean<a class="headerlink" href="#combine-trimmed-mean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_trimmed_mean</span></code></p>
 <section id="id78">
-<h4>Signature<a class="headerlink" href="#id78" title="Link to this heading">#</a></h4>
+<span id="signature-16"></span><h4>Signature<a class="headerlink" href="#id78" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_trimmed_mean</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">trim</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id79">
-<h4>Description<a class="headerlink" href="#id79" title="Link to this heading">#</a></h4>
+<span id="description-16"></span><h4>Description<a class="headerlink" href="#id79" title="Link to this heading">#</a></h4>
 <p>Trim extreme model forecasts before averaging.</p>
 </section>
 <section id="id80">
-<h4>Parameters<a class="headerlink" href="#id80" title="Link to this heading">#</a></h4>
+<span id="parameters-16"></span><h4>Parameters<a class="headerlink" href="#id80" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1940,11 +1940,11 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </div>
 </section>
 <section id="id81">
-<h4>Returns<a class="headerlink" href="#id81" title="Link to this heading">#</a></h4>
+<span id="returns-16"></span><h4>Returns<a class="headerlink" href="#id81" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p>
 </section>
 <section id="id82">
-<h4>Minimal Use<a class="headerlink" href="#id82" title="Link to this heading">#</a></h4>
+<span id="minimal-use-16"></span><h4>Minimal Use<a class="headerlink" href="#id82" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_trimmed_mean(...)</span>
@@ -1953,20 +1953,20 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </section>
 </section>
 <section id="combine-winsorized-mean">
-<h3>combine_winsorized_mean<a class="headerlink" href="#combine-winsorized-mean" title="Link to this heading">#</a></h3>
+<span id="combine_winsorized_mean"></span><h3>combine_winsorized_mean<a class="headerlink" href="#combine-winsorized-mean" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combine_winsorized_mean</span></code></p>
 <section id="id83">
-<h4>Signature<a class="headerlink" href="#id83" title="Link to this heading">#</a></h4>
+<span id="signature-17"></span><h4>Signature<a class="headerlink" href="#id83" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combine_winsorized_mean</span><span class="p">(</span><span class="n">forecasts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">limits</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
 </pre></div>
 </div>
 </section>
 <section id="id84">
-<h4>Description<a class="headerlink" href="#id84" title="Link to this heading">#</a></h4>
+<span id="description-17"></span><h4>Description<a class="headerlink" href="#id84" title="Link to this heading">#</a></h4>
 <p>Winsorize cross-model forecasts before averaging.</p>
 </section>
 <section id="id85">
-<h4>Parameters<a class="headerlink" href="#id85" title="Link to this heading">#</a></h4>
+<span id="parameters-17"></span><h4>Parameters<a class="headerlink" href="#id85" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -1991,11 +1991,11 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </div>
 </section>
 <section id="id86">
-<h4>Returns<a class="headerlink" href="#id86" title="Link to this heading">#</a></h4>
+<span id="returns-17"></span><h4>Returns<a class="headerlink" href="#id86" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">pd.Series</span></code></p>
 </section>
 <section id="id87">
-<h4>Minimal Use<a class="headerlink" href="#id87" title="Link to this heading">#</a></h4>
+<span id="minimal-use-17"></span><h4>Minimal Use<a class="headerlink" href="#id87" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combine_winsorized_mean(...)</span>
@@ -2004,20 +2004,20 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </section>
 </section>
 <section id="combination-spec">
-<h3>combination_spec<a class="headerlink" href="#combination-spec" title="Link to this heading">#</a></h3>
+<span id="combination_spec"></span><h3>combination_spec<a class="headerlink" href="#combination-spec" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.combination_spec</span></code></p>
 <section id="id88">
-<h4>Signature<a class="headerlink" href="#id88" title="Link to this heading">#</a></h4>
+<span id="signature-18"></span><h4>Signature<a class="headerlink" href="#id88" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">combination_spec</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CombinationSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id89">
-<h4>Description<a class="headerlink" href="#id89" title="Link to this heading">#</a></h4>
+<span id="description-18"></span><h4>Description<a class="headerlink" href="#id89" title="Link to this heading">#</a></h4>
 <p>Build a runner-compatible forecast-combination spec.</p>
 </section>
 <section id="id90">
-<h4>Parameters<a class="headerlink" href="#id90" title="Link to this heading">#</a></h4>
+<span id="parameters-18"></span><h4>Parameters<a class="headerlink" href="#id90" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2052,11 +2052,11 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </div>
 </section>
 <section id="id91">
-<h4>Returns<a class="headerlink" href="#id91" title="Link to this heading">#</a></h4>
+<span id="returns-18"></span><h4>Returns<a class="headerlink" href="#id91" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">CombinationSpec</span></code></p>
 </section>
 <section id="id92">
-<h4>Minimal Use<a class="headerlink" href="#id92" title="Link to this heading">#</a></h4>
+<span id="minimal-use-18"></span><h4>Minimal Use<a class="headerlink" href="#id92" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.combination_spec(...)</span>
@@ -2065,20 +2065,20 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </section>
 </section>
 <section id="custom-combination">
-<h3>custom_combination<a class="headerlink" href="#custom-combination" title="Link to this heading">#</a></h3>
+<span id="custom_combination"></span><h3>custom_combination<a class="headerlink" href="#custom-combination" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.combination.custom_combination</span></code></p>
 <section id="id93">
-<h4>Signature<a class="headerlink" href="#id93" title="Link to this heading">#</a></h4>
+<span id="signature-19"></span><h4>Signature<a class="headerlink" href="#id93" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">custom_combination</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">models</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CombinationSpec</span>
 </pre></div>
 </div>
 </section>
 <section id="id94">
-<h4>Description<a class="headerlink" href="#id94" title="Link to this heading">#</a></h4>
+<span id="description-19"></span><h4>Description<a class="headerlink" href="#id94" title="Link to this heading">#</a></h4>
 <p>Build a custom forecast-combination spec for <code class="docutils literal notranslate"><span class="pre">forecasting.run</span></code>.</p>
 </section>
 <section id="id95">
-<h4>Parameters<a class="headerlink" href="#id95" title="Link to this heading">#</a></h4>
+<span id="parameters-19"></span><h4>Parameters<a class="headerlink" href="#id95" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2113,11 +2113,11 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 </div>
 </section>
 <section id="id96">
-<h4>Returns<a class="headerlink" href="#id96" title="Link to this heading">#</a></h4>
+<span id="returns-19"></span><h4>Returns<a class="headerlink" href="#id96" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">CombinationSpec</span></code></p>
 </section>
 <section id="id97">
-<h4>Minimal Use<a class="headerlink" href="#id97" title="Link to this heading">#</a></h4>
+<span id="minimal-use-19"></span><h4>Minimal Use<a class="headerlink" href="#id97" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.custom_combination(...)</span>
@@ -2129,13 +2129,13 @@ the use of not-yet-realised errors for multi-step combinations.</p>
 <h3>run<a class="headerlink" href="#run" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.runner.run</span></code></p>
 <section id="id98">
-<h4>Signature<a class="headerlink" href="#id98" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">ModelSpec</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="n">WindowSpec</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing</span><span class="p">:</span> <span class="n">PreprocessSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing_policy</span><span class="p">:</span> <span class="n">StagePolicy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">FeatureSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">feature_policy</span><span class="p">:</span> <span class="n">StagePolicy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection</span><span class="p">:</span> <span class="n">SearchSpec</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SearchSpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection_policy</span><span class="p">:</span> <span class="n">StagePolicy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="n">maximize_model_selection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">horizons</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">forecast_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span> <span class="n">future_feature_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target_transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">combination</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">CombinationSpec</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">CombinationSpec</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">save_models</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">model_store</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;trained_model&quot;</span><span class="p">,</span> <span class="n">preprocessing_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">FittedPreprocessor</span> <span class="o">|</span> <span class="n">_PreparedStage</span> <span class="o">|</span> <span class="n">FittedFeatureBuilder</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing_store</span><span class="p">:</span> <span class="n">PreprocessorStore</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">selection_history</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">ResolvedForecastTask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tasks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ResolvedForecastTask</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ForecastResult</span>
+<span id="signature-20"></span><h4>Signature<a class="headerlink" href="#id98" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">ModelSpec</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="n">WindowSpec</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing</span><span class="p">:</span> <span class="n">PreprocessSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing_policy</span><span class="p">:</span> <span class="n">StagePolicy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">FeatureSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">feature_policy</span><span class="p">:</span> <span class="n">StagePolicy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection</span><span class="p">:</span> <span class="n">SearchSpec</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SearchSpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection_policy</span><span class="p">:</span> <span class="n">StagePolicy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"mse"</span><span class="p">,</span> <span class="n">maximize_model_selection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">horizons</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">forecast_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"direct"</span><span class="p">,</span> <span class="n">future_feature_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target_transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">combination</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">CombinationSpec</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">CombinationSpec</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">save_models</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">model_store</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">"trained_model"</span><span class="p">,</span> <span class="n">preprocessing_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">FittedPreprocessor</span> <span class="o">|</span> <span class="n">_PreparedStage</span> <span class="o">|</span> <span class="n">FittedFeatureBuilder</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing_store</span><span class="p">:</span> <span class="n">PreprocessorStore</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">selection_history</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">ResolvedForecastTask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tasks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ResolvedForecastTask</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ForecastResult</span>
 </pre></div>
 </div>
 </section>
 <section id="id99">
-<h4>Description<a class="headerlink" href="#id99" title="Link to this heading">#</a></h4>
+<span id="description-20"></span><h4>Description<a class="headerlink" href="#id99" title="Link to this heading">#</a></h4>
 <p>Run a windowed macro forecasting experiment.</p>
 <p>The runner composes small stage callables. <code class="docutils literal notranslate"><span class="pre">window</span></code> owns the temporal
 design, stage policies decide where preprocessing, features, and model
@@ -2161,7 +2161,7 @@ than reconciled: there is no defensible winner, and the caller who passed the
 loser would never find out.</p>
 </section>
 <section id="id100">
-<h4>Parameters<a class="headerlink" href="#id100" title="Link to this heading">#</a></h4>
+<span id="parameters-20"></span><h4>Parameters<a class="headerlink" href="#id100" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2316,11 +2316,11 @@ loser would never find out.</p>
 </div>
 </section>
 <section id="id101">
-<h4>Returns<a class="headerlink" href="#id101" title="Link to this heading">#</a></h4>
+<span id="returns-20"></span><h4>Returns<a class="headerlink" href="#id101" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code></p>
 </section>
 <section id="id102">
-<h4>Minimal Use<a class="headerlink" href="#id102" title="Link to this heading">#</a></h4>
+<span id="minimal-use-20"></span><h4>Minimal Use<a class="headerlink" href="#id102" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.run(...)</span>
@@ -2329,16 +2329,16 @@ loser would never find out.</p>
 </section>
 </section>
 <section id="run-forecast">
-<h3>run_forecast<a class="headerlink" href="#run-forecast" title="Link to this heading">#</a></h3>
+<span id="run_forecast"></span><h3>run_forecast<a class="headerlink" href="#run-forecast" title="Link to this heading">#</a></h3>
 <p>Qualified name: <code class="docutils literal notranslate"><span class="pre">macroforecast.forecasting.runner.run</span></code></p>
 <section id="id103">
-<h4>Signature<a class="headerlink" href="#id103" title="Link to this heading">#</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run_forecast</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">ModelSpec</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="n">WindowSpec</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing</span><span class="p">:</span> <span class="n">PreprocessSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing_policy</span><span class="p">:</span> <span class="n">StagePolicy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">FeatureSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">feature_policy</span><span class="p">:</span> <span class="n">StagePolicy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection</span><span class="p">:</span> <span class="n">SearchSpec</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SearchSpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection_policy</span><span class="p">:</span> <span class="n">StagePolicy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;mse&quot;</span><span class="p">,</span> <span class="n">maximize_model_selection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">horizons</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">forecast_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;direct&quot;</span><span class="p">,</span> <span class="n">future_feature_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target_transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">combination</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">CombinationSpec</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">CombinationSpec</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">save_models</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">model_store</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">&quot;trained_model&quot;</span><span class="p">,</span> <span class="n">preprocessing_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">FittedPreprocessor</span> <span class="o">|</span> <span class="n">_PreparedStage</span> <span class="o">|</span> <span class="n">FittedFeatureBuilder</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing_store</span><span class="p">:</span> <span class="n">PreprocessorStore</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">selection_history</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">ResolvedForecastTask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tasks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ResolvedForecastTask</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ForecastResult</span>
+<span id="signature-21"></span><h4>Signature<a class="headerlink" href="#id103" title="Link to this heading">#</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">macroforecast</span><span class="o">.</span><span class="n">forecasting</span><span class="o">.</span><span class="n">run_forecast</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="n">ModelSpec</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="n">WindowSpec</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing</span><span class="p">:</span> <span class="n">PreprocessSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing_policy</span><span class="p">:</span> <span class="n">StagePolicy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">features</span><span class="p">:</span> <span class="n">FeatureSpec</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">feature_policy</span><span class="p">:</span> <span class="n">StagePolicy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection</span><span class="p">:</span> <span class="n">SearchSpec</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">SearchSpec</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection_policy</span><span class="p">:</span> <span class="n">StagePolicy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model_selection_metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"mse"</span><span class="p">,</span> <span class="n">maximize_model_selection</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">preset</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">horizon</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">horizons</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">forecast_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"direct"</span><span class="p">,</span> <span class="n">future_feature_policy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">target_transform</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">combination</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">CombinationSpec</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="n">CombinationSpec</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">save_models</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">model_store</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">=</span> <span class="s2">"trained_model"</span><span class="p">,</span> <span class="n">preprocessing_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">FittedPreprocessor</span> <span class="o">|</span> <span class="n">_PreparedStage</span> <span class="o">|</span> <span class="n">FittedFeatureBuilder</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">preprocessing_store</span><span class="p">:</span> <span class="n">PreprocessorStore</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">selection_history</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">task</span><span class="p">:</span> <span class="n">ResolvedForecastTask</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tasks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ResolvedForecastTask</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ForecastResult</span>
 </pre></div>
 </div>
 </section>
 <section id="id104">
-<h4>Description<a class="headerlink" href="#id104" title="Link to this heading">#</a></h4>
+<span id="description-21"></span><h4>Description<a class="headerlink" href="#id104" title="Link to this heading">#</a></h4>
 <p>Run a windowed macro forecasting experiment.</p>
 <p>The runner composes small stage callables. <code class="docutils literal notranslate"><span class="pre">window</span></code> owns the temporal
 design, stage policies decide where preprocessing, features, and model
@@ -2364,7 +2364,7 @@ than reconciled: there is no defensible winner, and the caller who passed the
 loser would never find out.</p>
 </section>
 <section id="id105">
-<h4>Parameters<a class="headerlink" href="#id105" title="Link to this heading">#</a></h4>
+<span id="parameters-21"></span><h4>Parameters<a class="headerlink" href="#id105" title="Link to this heading">#</a></h4>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Name</p></th>
@@ -2519,11 +2519,11 @@ loser would never find out.</p>
 </div>
 </section>
 <section id="id106">
-<h4>Returns<a class="headerlink" href="#id106" title="Link to this heading">#</a></h4>
+<span id="returns-21"></span><h4>Returns<a class="headerlink" href="#id106" title="Link to this heading">#</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">ForecastResult</span></code></p>
 </section>
 <section id="id107">
-<h4>Minimal Use<a class="headerlink" href="#id107" title="Link to this heading">#</a></h4>
+<span id="minimal-use-21"></span><h4>Minimal Use<a class="headerlink" href="#id107" title="Link to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">macroforecast</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mf</span>
 <span class="c1"># Call with the signature above:</span>
 <span class="c1"># mf.forecasting.run_forecast(...)</span>
@@ -2569,7 +2569,7 @@ loser would never find out.</p>
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
@@ -2811,8 +2811,8 @@ loser would never find out.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="../_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -2839,7 +2839,6 @@ loser would never find out.</p>
 
   <p class="sphinx-version">
     Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
-    <br/>
   </p>
 </div>
       

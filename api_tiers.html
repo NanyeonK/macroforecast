@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 
@@ -27,26 +26,26 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=75c7c72ae941e8b558d8" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=6a604523" />
     <link rel="stylesheet" type="text/css" href="_static/custom.css?v=68cfb861" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=75c7c72ae941e8b558d8"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8" />
 
     <script src="_static/documentation_options.js?v=c9f84ce7"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
-    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script data-sd-tabs-storage-prefix="sphinx-design-tab-id-" src="_static/design-tabs.js?v=fcb327ea"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api_tiers';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -54,6 +53,7 @@
     <link rel="next" title="Architecture" href="architecture.html" />
     <link rel="prev" title="Zhang, Wahab and Wang (2023) replication trust note" href="replication/zww_2023_replication.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.9.5" />
   
@@ -103,7 +103,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation" aria-expanded="false" aria-controls="pst-primary-sidebar-modal">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -194,7 +194,7 @@
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
 <li class=" current active">
-  <a class="nav-link dropdown-item nav-internal" href="#">
+  <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
     API stability tiers
   </a>
 </li>
@@ -234,7 +234,7 @@
         <div class="navbar-item navbar-persistent--container">
           
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -245,15 +245,15 @@
         <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -290,7 +290,7 @@
   
     <div class="navbar-persistent--mobile">
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -299,7 +299,7 @@
   
 
   
-    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page" aria-expanded="false" aria-controls="pst-secondary-sidebar-modal">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -313,7 +313,7 @@
       
       
       
-      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <dialog id="pst-primary-sidebar-modal" tabindex="-1"></dialog>
       <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
         
 
@@ -379,7 +379,7 @@
 
 
 <li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+  <a class="nav-link nav-internal" href="#" aria-current="page">
     API stability tiers
   </a>
 </li>
@@ -418,15 +418,15 @@
           <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
-    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -461,7 +461,7 @@
   </div>
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
   <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
     <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
   </svg>
@@ -509,7 +509,7 @@
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="index.html" class="nav-link" aria-label="Home">
-        <i class="fa-solid fa-home"></i>
+        <i class="fa-solid fa-house"></i>
       </a>
     </li>
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">API stability tiers</span></li>
@@ -585,7 +585,7 @@ they are removed on the schedule below.</p>
 goes away.</p>
 </section>
 <section id="the-1-0-root-surface">
-<h2>The 1.0 root surface<a class="headerlink" href="#the-1-0-root-surface" title="Link to this heading">#</a></h2>
+<span id="the-10-root-surface"></span><h2>The 1.0 root surface<a class="headerlink" href="#the-1-0-root-surface" title="Link to this heading">#</a></h2>
 <p>Twenty-five names, and the arithmetic is checkable against the inventory:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">configure</span>       <span class="c1"># 1 lazy export</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">__version__</span>     <span class="c1"># the special surface, outside __all__</span>
@@ -623,7 +623,7 @@ canonical public paths and both stay. What the root map settles is only which
 one the convenience alias <code class="docutils literal notranslate"><span class="pre">mf.spec</span></code> resolves to, and that is <code class="docutils literal notranslate"><span class="pre">mf.data.spec</span></code>.</p></li>
 </ul>
 <section id="stable-the-documented-entry-points-15-canonical-paths-plus-mf-version">
-<h3>STABLE — the documented entry points (15 canonical paths, plus <code class="docutils literal notranslate"><span class="pre">mf.__version__</span></code>)<a class="headerlink" href="#stable-the-documented-entry-points-15-canonical-paths-plus-mf-version" title="Link to this heading">#</a></h3>
+<span id="stable--the-documented-entry-points-15-canonical-paths-plus-mf__version__"></span><h3>STABLE — the documented entry points (15 canonical paths, plus <code class="docutils literal notranslate"><span class="pre">mf.__version__</span></code>)<a class="headerlink" href="#stable-the-documented-entry-points-15-canonical-paths-plus-mf-version" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mf</span><span class="o">.</span><span class="n">configure</span>                            <span class="c1"># canonically mf.meta.configure</span>
 <span class="n">mf</span><span class="o">.</span><span class="n">__version__</span>                          <span class="c1"># special root name, outside the 808</span>
 
@@ -658,7 +658,7 @@ gets a <code class="docutils literal notranslate"><span class="pre">FutureWarnin
 before anything breaks.</p>
 </section>
 <section id="advanced-public-canonical-path-is-the-submodule-688-paths">
-<h3>ADVANCED — public, canonical path is the submodule (688 paths)<a class="headerlink" href="#advanced-public-canonical-path-is-the-submodule-688-paths" title="Link to this heading">#</a></h3>
+<span id="advanced--public-canonical-path-is-the-submodule-688-paths"></span><h3>ADVANCED — public, canonical path is the submodule (688 paths)<a class="headerlink" href="#advanced-public-canonical-path-is-the-submodule-688-paths" title="Link to this heading">#</a></h3>
 <p>Everything else declared in a submodule’s <code class="docutils literal notranslate"><span class="pre">__all__</span></code>, except the two subsystems
 below. This is the bulk of the package: <code class="docutils literal notranslate"><span class="pre">mf.models.*</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.feature_engineering.*</span></code>,
 <code class="docutils literal notranslate"><span class="pre">mf.window.*</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.data.*</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.preprocessing.*</span></code>, <code class="docutils literal notranslate"><span class="pre">mf.model_selection.*</span></code>,
@@ -672,7 +672,7 @@ major version, and a deprecation cycle before removal. The <strong>top-level ali
 for the 352 is the redundant part — not the function.</p>
 </section>
 <section id="experimental-contract-still-moving-105-paths">
-<h3>EXPERIMENTAL — contract still moving (105 paths)<a class="headerlink" href="#experimental-contract-still-moving-105-paths" title="Link to this heading">#</a></h3>
+<span id="experimental--contract-still-moving-105-paths"></span><h3>EXPERIMENTAL — contract still moving (105 paths)<a class="headerlink" href="#experimental-contract-still-moving-105-paths" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">mf.interpretation.*</span></code> (83 paths) — the attribution primitives got correctness
 oracles in the #446 audit (<code class="docutils literal notranslate"><span class="pre">tests/interpretation/test_attribution_oracles.py</span></code>,
@@ -689,7 +689,7 @@ until the missing oracles exist.</p>
 </section>
 </section>
 <section id="three-non-api-globals-removed-in-0-9-6-not-a-decision">
-<h2>Three non-API globals, removed in 0.9.6 — not a decision<a class="headerlink" href="#three-non-api-globals-removed-in-0-9-6-not-a-decision" title="Link to this heading">#</a></h2>
+<span id="three-non-api-globals-removed-in-096--not-a-decision"></span><h2>Three non-API globals, removed in 0.9.6 — not a decision<a class="headerlink" href="#three-non-api-globals-removed-in-0-9-6-not-a-decision" title="Link to this heading">#</a></h2>
 <p>These were not API and never were:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
@@ -741,7 +741,7 @@ provenance; the rebuilt inventory records them as root globals.</p>
 :class: important</p>
 <p>An earlier revision of this page listed <code class="docutils literal notranslate"><span class="pre">mf.Split</span></code> in the table above as “a
 builtin”. That was wrong, and the inventory this page is built from said so:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&quot;name&quot;: &quot;Split&quot;, &quot;canonical&quot;: &quot;mf.window.Split&quot;, &quot;kind&quot;: &quot;GenericAlias&quot;
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>"name": "Split", "canonical": "mf.window.Split", "kind": "GenericAlias"
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">Split</span></code> is a public type alias of the window subsystem. Its <em>top-level</em> alias is
@@ -752,8 +752,8 @@ data was right.</p>
 ## The four `Literal` aliases are API — measured, not assumed
 
 `MetadataLevel`, `RegimeDirection`, `SamePeriodPolicy` and `StageDefaultScope` were
-previously listed as needing &quot;a yes/no rather than a rule&quot;. The rebuilt inventory
-answers it: each is declared in its home submodule&#39;s `__all__`, and each appears in
+previously listed as needing "a yes/no rather than a rule". The rebuilt inventory
+answers it: each is declared in its home submodule's `__all__`, and each appears in
 a public signature.
 
 | alias | home | used in |
@@ -764,7 +764,7 @@ a public signature.
 | `SamePeriodPolicy` | `mf.data` | `same_period_predictors` |
 
 They are real submodule API types, not leaks. Their `__module__` reads `typing`
-because a `Literal[...]` alias carries typing&#39;s module — which is why the inventory
+because a `Literal[...]` alias carries typing's module — which is why the inventory
 treats `object.__module__` as corroboration rather than authority. They are
 canonical public submodule types, they are ADVANCED, and they are not on the
 removal list; only their top-level aliases are.
@@ -773,10 +773,10 @@ removal list; only their top-level aliases are.
 :class: important
 
 An earlier revision flagged `mf.BoogingRegressor` as reading like a typo for
-&quot;Boosting&quot; and proposed confirming it before publication. Reading the source
+"Boosting" and proposed confirming it before publication. Reading the source
 settles it — it is **Booging**, the algorithm from Goulet Coulombe, *To Bag is to
 Prune* (arXiv:2008.07063), and `model_ensemble/core.py:841` documents the mapping
-to the paper&#39;s R function `Booging(y, X, X.new, ...)` line by line, including the
+to the paper's R function `Booging(y, X, X.new, ...)` line by line, including the
 R defaults `B=100, mtry=0.8, sampling.rate=.75`.
 
 It is correctly named, stays, and needs no decision. What it needs is a docs entry,
@@ -885,7 +885,7 @@ them somewhere to point.</p>
             
             
               
-                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <dialog id="pst-secondary-sidebar-modal" tabindex="-1"></dialog>
                 <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
 
@@ -951,8 +951,8 @@ them somewhere to point.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=75c7c72ae941e8b558d8"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=75c7c72ae941e8b558d8"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -979,7 +979,6 @@ them somewhere to point.</p>
 
   <p class="sphinx-version">
     Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
-    <br/>
   </p>
 </div>
       
